@@ -2,6 +2,7 @@
   "files.associations": {
     "array": "cpp",
     "string_view": "cpp",
-    "span": "cpp"
+    "span": "cpp",
+    "iostream": "cpp"
   }
 }
