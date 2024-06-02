@@ -1,32 +1,21 @@
-#include <iostream>
+#include <vector>
 #include <opencv2/opencv.hpp>
-#include "opencv2/highgui/highgui.hpp"
 
-using namespace cv;
-using namespace std;
+#include "pose.hpp"
+#include "poseEstimation.hpp"
 
-int main()
-{
-    cout << CV_VERSION << endl;
+int main(){
 
-    string location = "ichikanakano.jpg";
+	poseEstimation::poseEstimation pe("../models/poseEstimationModel.onnx");
+	poseEstimation::poseTracker pt;
 
-    Mat im = cv::imread(location, 1);
-    if (im.empty())
-    {
-        cout << "Cannot open image!" << endl;
-        return -1;
-    }
+	
+	cv::Mat img = cv::imread("../fit1.jpg");
+	std::vector<poseEstimation::Pose> poses = pe.run(img);
+	pt.track(poses);
+	for(int i = 0; i < poses.size(); i++)
+		poses[i].draw(img, true);
+	cv::imwrite("../output.jpg", img);
 
-    // Mostrar tamaño de la imagen en consola
-    cout << im.size << endl;
-
-    // Mostrar la imagen en una ventana
-    namedWindow("Display Image", WINDOW_AUTOSIZE);
-    imshow("Display Image", im);
-
-    // Esperar a que se presione una tecla
-    waitKey(0);
-
-    return 0;
+	return 0;
 }

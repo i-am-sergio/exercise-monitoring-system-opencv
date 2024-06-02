@@ -1,3 +1,5 @@
-build
-python
+.vscode/
+build/
+python/
 *.exe
+opencv-4.x/
