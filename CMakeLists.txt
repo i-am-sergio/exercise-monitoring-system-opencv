@@ -1,12 +1,10 @@
-cmake_minimum_required(VERSION 3.10)
-project(SampleProject)
+SET(PROJECT_NAME poseEstimation)
 
-# Set the C++ standard to C++17
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+PROJECT(${PROJECT_NAME})
 
-# Add the OpenCV include directory (headers)
-include_directories("C:/opencv/install/include")
+FIND_PACKAGE(OpenCV REQUIRED)
+INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES("include")
 
 # Add the OpenCV library directory (libs)
 link_directories("C:/opencv/install/x64/mingw/lib")
