@@ -1,22 +1,25 @@
-SET(PROJECT_NAME poseEstimation)
+cmake_minimum_required(VERSION 3.10)
+project(SampleProject)
 
-PROJECT(${PROJECT_NAME})
+# Set the C++ standard to C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-FIND_PACKAGE(OpenCV REQUIRED)
-INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
-INCLUDE_DIRECTORIES("include")
+# Add the OpenCV include directory (headers)
+include_directories("C:/opencv/install/include")
 
 # Add the OpenCV library directory (libs)
 link_directories("C:/opencv/install/x64/mingw/lib")
 link_directories("C:/opencv/install/x64/mingw/bin")
 
 # Copy the image to the build directory
-file(COPY "ichikanakano.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY "fit1.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY "fit2.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY "fit3.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY "pose/coco/pose_deploy_linevec.prototxt" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY "pose/coco/pose_iter_440000.caffemodel" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "media/ichikanakano.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "media/fit1.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "media/fit2.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "media/fit3.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "media/fit4.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "models/pose_deploy_linevec.prototxt" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "models/pose_iter_440000.caffemodel" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Find the OpenCV libraries names
 find_package(OpenCV REQUIRED)
