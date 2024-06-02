@@ -1,13 +1,14 @@
 # Opencv projects configurations
 
-- **Download glew**: `Source code` for windows. [**Click Here**](https://github.com/opencv/opencv/releases/tag/4.9.0)
-- **Unzip** source code
-- **Compile** Opencv with Cmake in a build folder named `opencv`:
+1. **Download opencv**: `Source code` for windows. [**Click Here**](https://github.com/opencv/opencv/releases/tag/4.9.0)
+2. **Unzip** source code
+3. **Compile** Opencv with Cmake in a build folder named `opencv`:
     ```powershell
-    mkdir opencv && cd opencv
+    mkdir opencv
     ```
-    Use cmake gui for generate makefikes: [**Step 3 here**](https://medium.com/csmadeeasy/opencv-c-installation-on-windows-with-mingw-c0fc1499f39)
-3. **Move Folder**: Put `opencv` folder in C root directory `C:\`
+    - Use cmake gui for generate makefikes: [**Step 3 here**](https://medium.com/csmadeeasy/opencv-c-installation-on-windows-with-mingw-c0fc1499f39)
+4. **Move Folder**: Put `opencv` folder in C root directory `C:\`
+5. **Add this Environment variable to path:** `C:\opencv\install\x64\mingw\bin`
 
 ## 1. Configure `.vscode/c_cpp_properties.json`:
 ```json
@@ -17,14 +18,14 @@
             "name": "Win32",
             "includePath": [
                 "${default}",
-                "C:\\opencv\\install\\include"  // path to build opencv"
+                "C:\\opencv\\install\\include"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
-            "compilerPath": "C:\\Strawberry\\c\\bin\\gcc.exe",
+            "compilerPath": "C:\\Users\\sergi\\scoop\\apps\\mingw\\current\\bin\\gcc.exe",
             "cStandard": "c17",
             "cppStandard": "gnu++17",
             "intelliSenseMode": "windows-gcc-x64"
