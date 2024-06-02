@@ -1,13 +1,16 @@
 #include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include <chrono>
+
 using namespace cv;
 using namespace cv::dnn;
-
-#include <iostream>
 using namespace std;
-
-const string imgFile = "fit1.jpg";
 
 const int POSE_PAIRS[3][20][2] = {
     {// COCO body
@@ -67,120 +70,131 @@ const int POSE_PAIRS[3][20][2] = {
         {19, 20} // small
     }};
 
+mutex mtx_capture;
+mutex mtx_process;
+condition_variable cv_frame;
+queue<Mat> frame_queue;
+queue<Mat> processed_queue;
+bool stop = false;
+
+void capture_frame(VideoCapture &cap) {
+    while (true) {
+        Mat frame;
+        cap >> frame;
+        if (frame.empty())
+            break;
+        {
+            lock_guard<mutex> lock(mtx_capture);
+            frame_queue.push(frame);
+        }
+        cv_frame.notify_all();
+        this_thread::sleep_for(chrono::milliseconds(200)); // Espera 200ms (5 fps)
+        if (stop) break;
+    }
+}
+
+void process_frame(Net &net, const int W_in, const int H_in, const float scale, const float thresh) {
+    while (true) {
+        Mat frame;
+        {
+            unique_lock<mutex> lock(mtx_capture);
+            cv_frame.wait(lock, []{ return !frame_queue.empty() || stop; });
+            if (stop && frame_queue.empty()) break;
+            frame = frame_queue.front();
+            frame_queue.pop();
+        }
+
+        Mat inputBlob = blobFromImage(frame, scale, Size(W_in, H_in), Scalar(0, 0, 0), false, false);
+        net.setInput(inputBlob);
+        Mat result = net.forward();
+
+        int H = result.size[2];
+        int W = result.size[3];
+
+        vector<Point> points(22);
+        for (int n = 0; n < 18; n++)
+        {
+            Mat heatMap(H, W, CV_32F, result.ptr(0, n));
+            Point p(-1, -1), pm;
+            double conf;
+            minMaxLoc(heatMap, 0, &conf, 0, &pm);
+            if (conf > thresh)
+                p = pm;
+            points[n] = p;
+        }
+
+        float SX = float(frame.cols) / W;
+        float SY = float(frame.rows) / H;
+        for (int n = 0; n < 17; n++)
+        {
+            Point2f a = points[POSE_PAIRS[0][n][0]];
+            Point2f b = points[POSE_PAIRS[0][n][1]];
+
+            if (a.x <= 0 || a.y <= 0 || b.x <= 0 || b.y <= 0)
+                continue;
+
+            a.x *= SX;
+            a.y *= SY;
+            b.x *= SX;
+            b.y *= SY;
+
+            line(frame, a, b, Scalar(0, 200, 0), 2);
+            circle(frame, a, 3, Scalar(0, 0, 200), -1);
+            circle(frame, b, 3, Scalar(0, 0, 200), -1);
+        }
+
+        {
+            lock_guard<mutex> lock(mtx_process);
+            processed_queue.push(frame);
+        }
+    }
+}
+
+void display_frame() {
+    while (true) {
+        Mat frame;
+        {
+            unique_lock<mutex> lock(mtx_process);
+            if (processed_queue.empty()) continue;
+            frame = processed_queue.front();
+            processed_queue.pop();
+        }
+
+        imshow("OpenPose", frame);
+        if (waitKey(1) == 27) { // Presiona 'ESC' para salir
+            stop = true;
+            break;
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
-    CommandLineParser parser(argc, argv,
-                             "{ h help | false | print this help message }"
-                             "{ p proto | | (required) model configuration, e.g. hand/pose.prototxt }"
-                             "{ m model | | (required) model weights, e.g. hand/pose_iter_102000.caffemodel }"
-                             "{ i image | | (required) path to image file (containing a single person, or hand) }"
-                             "{ d dataset | | specify what kind of model was trained. It could be (COCO, MPI, HAND) depends on dataset. }"
-                             "{ width | 368 | Preprocess input image by resizing to a specific width. }"
-                             "{ height | 368 | Preprocess input image by resizing to a specific height. }"
-                             "{ t threshold | 0.1 | threshold or confidence value for the heatmap }"
-                             "{ s scale | 0.003922 | scale for blob }");
+    const string modelTxt = "pose_deploy_linevec.prototxt";
+    const string modelBin = "pose_iter_440000.caffemodel";
+    const int W_in = 368;
+    const int H_in = 368;
+    const float thresh = 0.1;
+    const float scale = 0.003922;
 
-    String modelTxt = "pose_deploy_linevec.prototxt";
-    String modelBin = "pose_iter_440000.caffemodel";
-    String imageFile = imgFile;
-    String dataset = "COCO";
-    int W_in = parser.get<int>("width");
-    int H_in = parser.get<int>("height");
-    float thresh = parser.get<float>("threshold");
-    float scale = parser.get<float>("scale");
-
-    if (parser.get<bool>("help") || modelTxt.empty() || modelBin.empty() || imageFile.empty())
-    {
-        cout << "A sample app to demonstrate human or hand pose detection with a pretrained OpenPose dnn." << endl;
-        parser.printMessage();
-        return 0;
-    }
-
-    int midx, npairs, nparts;
-    if (!dataset.compare("COCO"))
-    {
-        midx = 0;
-        npairs = 17;
-        nparts = 18;
-    }
-    else if (!dataset.compare("MPI"))
-    {
-        midx = 1;
-        npairs = 14;
-        nparts = 16;
-    }
-    else if (!dataset.compare("HAND"))
-    {
-        midx = 2;
-        npairs = 20;
-        nparts = 22;
-    }
-    else
-    {
-        std::cerr << "Can't interpret dataset parameter: " << dataset << std::endl;
-        exit(-1);
-    }
-
-    // read the network model
     Net net = readNet(modelBin, modelTxt);
-    // and the image
-    Mat img = imread(imageFile);
-    if (img.empty())
+
+    VideoCapture cap(0); // Abre la cámara predeterminada (0).
+    if (!cap.isOpened())
     {
-        std::cerr << "Can't read image from the file: " << imageFile << std::endl;
-        exit(-1);
+        cerr << "Error opening camera" << endl;
+        return -1;
     }
 
-    // send it through the network
-    Mat inputBlob = blobFromImage(img, scale, Size(W_in, H_in), Scalar(0, 0, 0), false, false);
-    net.setInput(inputBlob);
-    Mat result = net.forward();
-    // the result is an array of "heatmaps", the probability of a body part being in location x,y
+    thread t1(capture_frame, ref(cap));
+    thread t2(process_frame, ref(net), W_in, H_in, scale, thresh);
+    thread t3(display_frame);
 
-    int H = result.size[2];
-    int W = result.size[3];
+    t1.join();
+    t2.join();
+    t3.join();
 
-    // find the position of the body parts
-    vector<Point> points(22);
-    for (int n = 0; n < nparts; n++)
-    {
-        // Slice heatmap of corresponding body's part.
-        Mat heatMap(H, W, CV_32F, result.ptr(0, n));
-        // 1 maximum per heatmap
-        Point p(-1, -1), pm;
-        double conf;
-        minMaxLoc(heatMap, 0, &conf, 0, &pm);
-        if (conf > thresh)
-            p = pm;
-        points[n] = p;
-    }
-
-    // connect body parts and draw it !
-    float SX = float(img.cols) / W;
-    float SY = float(img.rows) / H;
-    for (int n = 0; n < npairs; n++)
-    {
-        // lookup 2 connected body/hand parts
-        Point2f a = points[POSE_PAIRS[midx][n][0]];
-        Point2f b = points[POSE_PAIRS[midx][n][1]];
-
-        // we did not find enough confidence before
-        if (a.x <= 0 || a.y <= 0 || b.x <= 0 || b.y <= 0)
-            continue;
-
-        // scale to image size
-        a.x *= SX;
-        a.y *= SY;
-        b.x *= SX;
-        b.y *= SY;
-
-        line(img, a, b, Scalar(0, 200, 0), 2);
-        circle(img, a, 3, Scalar(0, 0, 200), -1);
-        circle(img, b, 3, Scalar(0, 0, 200), -1);
-    }
-
-    imshow("OpenPose", img);
-    waitKey();
-
+    cap.release();
+    destroyAllWindows();
     return 0;
 }
