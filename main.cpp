@@ -13,7 +13,8 @@ int main(int argc, char **argv)
     int H_in = 368;
     float thresh = 0.1;
     float scale = 0.003922;
-    auto estimated_image = analyzePose("fit1.jpg", W_in, H_in, thresh, scale);
+    Mat frame = imread("fit1.jpg");
+    auto estimated_image = analyzePose(frame, W_in, H_in, thresh, scale);
     imshow("Estimated Image", estimated_image);
     waitKey(0);
     return 0;

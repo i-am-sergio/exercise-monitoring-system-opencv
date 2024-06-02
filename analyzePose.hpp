@@ -15,22 +15,16 @@ using namespace std;
 const int POSE_PAIRS[20][2] = {
     {1, 2}, {1, 5}, {2, 3}, {3, 4}, {5, 6}, {6, 7}, {1, 8}, {8, 9}, {9, 10}, {1, 11}, {11, 12}, {12, 13}, {1, 0}, {0, 14}, {14, 16}, {0, 15}, {15, 17}};
 
-Mat analyzePose(const string &imgW, int W_in, int H_in, float thresh, float scale)
+Mat analyzePose(Mat &frame, int W_in, int H_in, float thresh, float scale)
 {
     String modelTxt = "pose_deploy_linevec.prototxt";
     String modelBin = "pose_iter_440000.caffemodel";
-    String imageFile = imgW;
     String dataset = "COCO";
     int npairs = 17;
     int nparts = 18;
-
+    Mat img = frame;
     Net net = readNet(modelBin, modelTxt);
-    Mat img = imread(imageFile);
-    if (img.empty())
-    {
-        cerr << "Can't read image from the file: " << imageFile << endl;
-        exit(-1);
-    }
+
     Mat inputBlob = blobFromImage(img, scale, Size(W_in, H_in), Scalar(0, 0, 0), false, false);
     net.setInput(inputBlob);
     Mat result = net.forward();
