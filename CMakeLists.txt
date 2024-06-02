@@ -27,9 +27,7 @@ find_package(OpenCV REQUIRED)
 # Add the executable
 add_executable(testimg main.cpp)
 add_executable(testvideo video.cpp)
-add_executable(testload load.cpp)
 
 # Link the OpenCV libraries to the executable
 target_link_libraries(testimg ${OpenCV_LIBS})
 target_link_libraries(testvideo ${OpenCV_LIBS})
-target_link_libraries(testload ${OpenCV_LIBS})
