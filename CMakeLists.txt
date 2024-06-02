@@ -14,14 +14,18 @@ link_directories("C:/opencv/install/x64/mingw/bin")
 
 # Copy the image to the build directory
 file(COPY "ichikanakano.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "fit1.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "graph_opt.pb" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Find the OpenCV libraries names
 find_package(OpenCV REQUIRED)
 
 # Add the executable
-add_executable(testimg main.cpp)
-add_executable(testvideo video.cpp)
+# add_executable(testimg main.cpp)
+# add_executable(testvideo video.cpp)
+add_executable(testload load.cpp)
 
 # Link the OpenCV libraries to the executable
-target_link_libraries(testimg ${OpenCV_LIBS})
-target_link_libraries(testvideo ${OpenCV_LIBS})
+# target_link_libraries(testimg ${OpenCV_LIBS})
+# target_link_libraries(testvideo ${OpenCV_LIBS})
+target_link_libraries(testload ${OpenCV_LIBS})
