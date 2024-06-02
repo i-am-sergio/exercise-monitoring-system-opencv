@@ -3,4 +3,6 @@ python
 *.exe
 pose
 .vscode/
+*.prototxt
+*.caffemodel
 *.exe
