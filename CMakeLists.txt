@@ -15,7 +15,10 @@ link_directories("C:/opencv/install/x64/mingw/bin")
 # Copy the image to the build directory
 file(COPY "ichikanakano.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY "fit1.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY "graph_opt.pb" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "fit2.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "fit3.jpg" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "pose/coco/pose_deploy_linevec.prototxt" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "pose/coco/pose_iter_440000.caffemodel" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Find the OpenCV libraries names
 find_package(OpenCV REQUIRED)
