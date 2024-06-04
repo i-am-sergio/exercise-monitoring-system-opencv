@@ -10,7 +10,10 @@ class MainController(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        # Connect buttons to their respective exercises
         self.ui.sentadilla_btn.clicked.connect(self.open_sentadilla_exercise)
+        # self.ui.estocada_btn.clicked.connect(self.open_estocada_exercise)
 
         controller_dir = os.path.dirname(os.path.abspath(__file__))
         project_root_dir = os.path.abspath(os.path.join(controller_dir, ".."))
@@ -24,7 +27,7 @@ class MainController(QMainWindow):
                                         border-style: outset;
                                     }}
                                     QPushButton#sentadilla_btn:hover {{
-                                        cursor: pointer;
+                                        border-style: inset;
                                     }}
                                     """        
         # Change properties of sentadilla_btn

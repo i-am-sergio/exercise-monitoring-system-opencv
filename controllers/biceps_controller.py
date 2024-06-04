@@ -2,5 +2,5 @@
 # from PyQt5 import QtWidgets
 # # from views.sentadilla_window import Ui_SentadillaWindow
 
-# class EstocadaController(QMainWindow):
+# class BicepsController(QMainWindow):
 #     pass

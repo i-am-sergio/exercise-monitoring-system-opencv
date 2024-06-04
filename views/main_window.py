@@ -42,6 +42,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.sentadilla_btn.setFont(font)
         self.sentadilla_btn.setStyleSheet("QPushButton {\n"
+"    background-image: url(:/images/1_sentadilla_btn.png);\n"
 "    /*background-color: rgb(28,19,42);*/\n"
 "    background-color: #787878;\n"
 "    border-style: outset;\n"
@@ -58,6 +59,7 @@ class Ui_MainWindow(object):
 "    border-style: inset;\n"
 "}\n"
 "QPushButton:hover {\n"
+"    cursor: pointer;\n"
 "    /*background-color: #3F325C;*/\n"
 "}")
         self.sentadilla_btn.setText("")
@@ -88,10 +90,10 @@ class Ui_MainWindow(object):
         self.estocada_btn.setText("")
         self.estocada_btn.setObjectName("estocada_btn")
         self.gridLayout.addWidget(self.estocada_btn, 0, 1, 1, 1)
-        self.pushButton_4 = QtWidgets.QPushButton(self.widget_izq)
-        self.pushButton_4.setMinimumSize(QtCore.QSize(350, 210))
-        self.pushButton_4.setMaximumSize(QtCore.QSize(350, 210))
-        self.pushButton_4.setStyleSheet("QPushButton {\n"
+        self.puente_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.puente_btn.setMinimumSize(QtCore.QSize(350, 210))
+        self.puente_btn.setMaximumSize(QtCore.QSize(350, 210))
+        self.puente_btn.setStyleSheet("QPushButton {\n"
 "    /*background-color: rgb(28,19,42);*/\n"
 "    background-color: #787878;\n"
 "    border-style: outset;\n"
@@ -110,13 +112,13 @@ class Ui_MainWindow(object):
 "QPushButton:hover {\n"
 "    /*background-color: #3F325C;*/\n"
 "}")
-        self.pushButton_4.setText("")
-        self.pushButton_4.setObjectName("pushButton_4")
-        self.gridLayout.addWidget(self.pushButton_4, 1, 1, 1, 1)
-        self.pushButton_5 = QtWidgets.QPushButton(self.widget_izq)
-        self.pushButton_5.setMinimumSize(QtCore.QSize(350, 210))
-        self.pushButton_5.setMaximumSize(QtCore.QSize(350, 210))
-        self.pushButton_5.setStyleSheet("QPushButton {\n"
+        self.puente_btn.setText("")
+        self.puente_btn.setObjectName("puente_btn")
+        self.gridLayout.addWidget(self.puente_btn, 1, 1, 1, 1)
+        self.elevaciones_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.elevaciones_btn.setMinimumSize(QtCore.QSize(350, 210))
+        self.elevaciones_btn.setMaximumSize(QtCore.QSize(350, 210))
+        self.elevaciones_btn.setStyleSheet("QPushButton {\n"
 "    /*background-color: rgb(28,19,42);*/\n"
 "    background-color: #787878;\n"
 "    border-style: outset;\n"
@@ -135,13 +137,13 @@ class Ui_MainWindow(object):
 "QPushButton:hover {\n"
 "    /*background-color: #3F325C;*/\n"
 "}")
-        self.pushButton_5.setText("")
-        self.pushButton_5.setObjectName("pushButton_5")
-        self.gridLayout.addWidget(self.pushButton_5, 3, 0, 1, 1)
-        self.pushButton_6 = QtWidgets.QPushButton(self.widget_izq)
-        self.pushButton_6.setMinimumSize(QtCore.QSize(350, 210))
-        self.pushButton_6.setMaximumSize(QtCore.QSize(350, 210))
-        self.pushButton_6.setStyleSheet("QPushButton {\n"
+        self.elevaciones_btn.setText("")
+        self.elevaciones_btn.setObjectName("elevaciones_btn")
+        self.gridLayout.addWidget(self.elevaciones_btn, 3, 0, 1, 1)
+        self.plancha_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.plancha_btn.setMinimumSize(QtCore.QSize(350, 210))
+        self.plancha_btn.setMaximumSize(QtCore.QSize(350, 210))
+        self.plancha_btn.setStyleSheet("QPushButton {\n"
 "    /*background-color: rgb(28,19,42);*/\n"
 "    background-color: #787878;\n"
 "    border-style: outset;\n"
@@ -160,13 +162,13 @@ class Ui_MainWindow(object):
 "QPushButton:hover {\n"
 "    /*background-color: #3F325C;*/\n"
 "}")
-        self.pushButton_6.setText("")
-        self.pushButton_6.setObjectName("pushButton_6")
-        self.gridLayout.addWidget(self.pushButton_6, 3, 1, 1, 1)
-        self.pushButton_3 = QtWidgets.QPushButton(self.widget_izq)
-        self.pushButton_3.setMinimumSize(QtCore.QSize(350, 210))
-        self.pushButton_3.setMaximumSize(QtCore.QSize(350, 210))
-        self.pushButton_3.setStyleSheet("QPushButton {\n"
+        self.plancha_btn.setText("")
+        self.plancha_btn.setObjectName("plancha_btn")
+        self.gridLayout.addWidget(self.plancha_btn, 3, 1, 1, 1)
+        self.biceps_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.biceps_btn.setMinimumSize(QtCore.QSize(350, 210))
+        self.biceps_btn.setMaximumSize(QtCore.QSize(350, 210))
+        self.biceps_btn.setStyleSheet("QPushButton {\n"
 "    /*background-color: rgb(28,19,42);*/\n"
 "    background-color: #787878;\n"
 "    border-style: outset;\n"
@@ -185,9 +187,9 @@ class Ui_MainWindow(object):
 "QPushButton:hover {\n"
 "    /*background-color: #3F325C;*/\n"
 "}")
-        self.pushButton_3.setText("")
-        self.pushButton_3.setObjectName("pushButton_3")
-        self.gridLayout.addWidget(self.pushButton_3, 1, 0, 1, 1)
+        self.biceps_btn.setText("")
+        self.biceps_btn.setObjectName("biceps_btn")
+        self.gridLayout.addWidget(self.biceps_btn, 1, 0, 1, 1)
         self.horizontalLayout.addWidget(self.widget_izq)
         self.widget_der = QtWidgets.QWidget(self.widget)
         self.widget_der.setMaximumSize(QtCore.QSize(8777217, 16777215))

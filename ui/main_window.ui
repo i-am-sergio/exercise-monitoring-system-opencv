@@ -131,7 +131,7 @@ QPushButton:hover {
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QPushButton" name="pushButton_4">
+           <widget class="QPushButton" name="puente_btn">
             <property name="minimumSize">
              <size>
               <width>350</width>
@@ -171,7 +171,7 @@ QPushButton:hover {
            </widget>
           </item>
           <item row="3" column="0">
-           <widget class="QPushButton" name="pushButton_5">
+           <widget class="QPushButton" name="elevaciones_btn">
             <property name="minimumSize">
              <size>
               <width>350</width>
@@ -211,7 +211,7 @@ QPushButton:hover {
            </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QPushButton" name="pushButton_6">
+           <widget class="QPushButton" name="plancha_btn">
             <property name="minimumSize">
              <size>
               <width>350</width>
@@ -251,7 +251,7 @@ QPushButton:hover {
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QPushButton" name="pushButton_3">
+           <widget class="QPushButton" name="biceps_btn">
             <property name="minimumSize">
              <size>
               <width>350</width>
@@ -349,8 +349,6 @@ SYSTEM</string>
    </layout>
   </widget>
  </widget>
- <resources>
-  <include location="res.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>
