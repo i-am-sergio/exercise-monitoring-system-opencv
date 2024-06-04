@@ -1,3 +1,6 @@
 build
 python
 *.exe
+venv/**
+*.tflite
+**_pycache_**
