@@ -131,7 +131,7 @@ QPushButton:hover {
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QPushButton" name="puente_btn">
+           <widget class="QPushButton" name="abdominal_btn">
             <property name="minimumSize">
              <size>
               <width>350</width>
