@@ -1,8 +1,7 @@
 build
 python
 *.exe
-pose
-.vscode/
-*.prototxt
-*.caffemodel
-*.exe
+venv/**
+*.tflite
+**_pycache_**
+**.mp4

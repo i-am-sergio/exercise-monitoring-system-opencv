@@ -1,58 +1,19 @@
-import sys
-import cv2
-import tensorflow as tf
-import numpy as np
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'video.ui'
+#
+# Created by: PyQt5 UI code generator 5.14.1
+#
+# WARNING! All changes made in this file will be lost!
+
+
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QThread, pyqtSignal
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+import cv2
 
-# Configurar el modelo de TensorFlow Lite
-interpreter = tf.lite.Interpreter(model_path='thunder.tflite')
-interpreter.allocate_tensors()
 
-EDGES = {
-    (0, 1): 'm',
-    (0, 2): 'c',
-    (1, 3): 'm',
-    (2, 4): 'c',
-    (0, 5): 'm',
-    (0, 6): 'c',
-    (5, 7): 'm',
-    (7, 9): 'm',
-    (6, 8): 'c',
-    (8, 10): 'c',
-    (5, 6): 'y',
-    (5, 11): 'm',
-    (6, 12): 'c',
-    (11, 12): 'y',
-    (11, 13): 'm',
-    (13, 15): 'm',
-    (12, 14): 'c',
-    (14, 16): 'c'
-}
-
-def draw_connections(frame, keypoints, edges, confidence_threshold):
-    y, x, _ = frame.shape
-    shaped = np.squeeze(np.multiply(keypoints, [y,x,1]))
-    
-    for edge, _ in edges.items():
-        p1, p2 = edge
-        y1, x1, c1 = shaped[p1]
-        y2, x2, c2 = shaped[p2]
-        
-        if (c1 > confidence_threshold) & (c2 > confidence_threshold):      
-            cv2.line(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0,0,255), 2)
-
-def draw_keypoints(frame, keypoints, confidence_threshold):
-    y, x, _ = frame.shape
-    shaped = np.squeeze(np.multiply(keypoints, [y,x,1]))
-    
-    for kp in shaped:
-        ky, kx, kp_conf = kp
-        if kp_conf > confidence_threshold:
-            cv2.circle(frame, (int(kx), int(ky)), 4, (0,255,0), -1)
-
-class Ui_MainWindow(object):
+class Ui_ExerciseWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(700, 500)
@@ -135,44 +96,23 @@ class Work(QThread):
     def run(self):
         self.hilo_corriendo = True
         cap = cv2.VideoCapture(0)
-        
         while self.hilo_corriendo:
             ret, frame = cap.read()
             if ret:
-                # Procesar la imagen
-                img = frame.copy()
-                img = tf.image.resize_with_pad(np.expand_dims(img, axis=0), 256,256)
-                input_image = tf.cast(img, dtype=tf.float32)
-
-                # Configurar la entrada y salida del modelo
-                input_details = interpreter.get_input_details()
-                output_details = interpreter.get_output_details()
-
-                # Realizar predicciones
-                interpreter.set_tensor(input_details[0]['index'], np.array(input_image))
-                interpreter.invoke()
-                keypoints_with_scores = interpreter.get_tensor(output_details[0]['index'])
-
-                # Renderizar resultados
-                draw_connections(frame, keypoints_with_scores, EDGES, 0.4)
-                draw_keypoints(frame, keypoints_with_scores, 0.4)
-
-                # Convertir imagen para mostrar en el QLabel
                 Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 flip = cv2.flip(Image, 1)
                 convertir_QT = QImage(flip.data, flip.shape[1], flip.shape[0], QImage.Format_RGB888)
-                pic = convertir_QT.scaled(320, 240, QtCore.Qt.KeepAspectRatio)
+                pic = convertir_QT.scaled(320, 240, Qt.KeepAspectRatio)
                 self.Imageupd.emit(pic)
-        cap.release()
-
     def stop(self):
         self.hilo_corriendo = False
         self.quit()
 
 if __name__ == "__main__":
+    import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
+    ui = Ui_ExerciseWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
