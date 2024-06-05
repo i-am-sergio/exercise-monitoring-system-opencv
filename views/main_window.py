@@ -91,10 +91,10 @@ class Ui_MainWindow(object):
         self.estocada_btn.setText("")
         self.estocada_btn.setObjectName("estocada_btn")
         self.gridLayout.addWidget(self.estocada_btn, 0, 1, 1, 1)
-        self.puente_btn = QtWidgets.QPushButton(self.widget_izq)
-        self.puente_btn.setMinimumSize(QtCore.QSize(350, 210))
-        self.puente_btn.setMaximumSize(QtCore.QSize(350, 210))
-        self.puente_btn.setStyleSheet("QPushButton {\n"
+        self.abdominal_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.abdominal_btn.setMinimumSize(QtCore.QSize(350, 210))
+        self.abdominal_btn.setMaximumSize(QtCore.QSize(350, 210))
+        self.abdominal_btn.setStyleSheet("QPushButton {\n"
 "    /*background-color: rgb(28,19,42);*/\n"
 "    background-color: #787878;\n"
 "    border-style: outset;\n"
@@ -113,9 +113,9 @@ class Ui_MainWindow(object):
 "QPushButton:hover {\n"
 "    /*background-color: #3F325C;*/\n"
 "}")
-        self.puente_btn.setText("")
-        self.puente_btn.setObjectName("puente_btn")
-        self.gridLayout.addWidget(self.puente_btn, 1, 1, 1, 1)
+        self.abdominal_btn.setText("")
+        self.abdominal_btn.setObjectName("abdominal_btn")
+        self.gridLayout.addWidget(self.abdominal_btn, 1, 1, 1, 1)
         self.elevaciones_btn = QtWidgets.QPushButton(self.widget_izq)
         self.elevaciones_btn.setMinimumSize(QtCore.QSize(350, 210))
         self.elevaciones_btn.setMaximumSize(QtCore.QSize(350, 210))
