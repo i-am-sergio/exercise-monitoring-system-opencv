@@ -11,15 +11,7 @@ class MainController(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
-        # Define image directories
-        controller_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root_dir = os.path.abspath(os.path.join(controller_dir, ".."))
         
-        img_dir1 = os.path.join(project_root_dir, "resources/1_sentadilla_btn.png")
-        img_dir2 = os.path.join(project_root_dir, "resources/2_lunge_btn.png")
-        img_dir3 = os.path.join(project_root_dir, "resources/3_biceps_btn.png")
-
         # Set stylesheets
         self.set_button_styles()
 
