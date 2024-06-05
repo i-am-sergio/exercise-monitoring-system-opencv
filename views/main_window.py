@@ -69,6 +69,7 @@ class Ui_MainWindow(object):
         self.estocada_btn.setMinimumSize(QtCore.QSize(350, 210))
         self.estocada_btn.setMaximumSize(QtCore.QSize(350, 210))
         self.estocada_btn.setStyleSheet("QPushButton {\n"
+"    background-image: url(:/images/2_lunge_btn.png);\n"
 "    /*background-color: rgb(28,19,42);*/\n"
 "    background-color: #787878;\n"
 "    border-style: outset;\n"
