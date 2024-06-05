@@ -26,7 +26,7 @@ EDGES = {
 
 class EstocadaController(ShowWindow):
     def __init__(self):
-        super().__init__(video_source="detection/lunge_fragment.mp4")
+        super().__init__(video_source="detection/test.mp4")
         self.rep_count = 0
         self.in_lunge_position = False
         self.interpreter = tf.lite.Interpreter(model_path='resources/models/thunder.tflite')
@@ -44,7 +44,7 @@ class EstocadaController(ShowWindow):
         radians = np.arctan2(c[1] - b[1], c[0] - b[0]) - np.arctan2(a[1] - b[1], a[0] - b[0])
         angle = np.abs(radians * 180.0 / np.pi)
         
-        if angle > 180.0:
+        if angle > 200.0:
             angle = 360 - angle
         
         return angle
@@ -64,7 +64,7 @@ class EstocadaController(ShowWindow):
         right_knee_angle = self.calculate_angle(right_hip, right_knee, right_ankle)
         
         # Check if angles are within the correct range for a lunge
-        if 80 <= left_knee_angle <= 100 and 80 <= right_knee_angle <= 100:
+        if 70 <= left_knee_angle <= 110 and 70 <= right_knee_angle <= 110:
             return True
         return False
     
