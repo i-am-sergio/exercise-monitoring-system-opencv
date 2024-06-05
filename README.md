@@ -2,11 +2,11 @@
 
 [**Click Here for project settings**](SETTINGS.md)
 
-![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![OpenCV](https://img.shields.io/badge/opencv-%23white.svg?style=for-the-badge&logo=opencv&logoColor=white)
-![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
-<!-- ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) -->
+<!-- ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white) -->
+<!-- ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white) -->
 
 ## Description
 
@@ -27,29 +27,38 @@ This project is an exercise monitoring system that uses OpenCV for video capture
 
 ## Structure
 
+4. **Project Structure:**
 ```
 exercise-monitoring-system/
 │
-├── main.py
-├── modules/
-│   ├── video_capture.py
-│   ├── exercise_detection.py
-│   ├── visualization.py
-│   └── utils.py
+├── main.py                 # Archivo principal para ejecutar la aplicación
+├── requirements.txt        # Dependencias del proyecto
 │
-├── data/
-│   ├── detection_model.pkl
-│   └── ...
+├── resources/              # Archivos de recursos como imágenes, iconos, etc.
+│   ├── icons ...
+│   ├── images ...
+│   └── stylesheets ...
 │
-├── tests/
-│   ├── test_video_capture.py
-│   ├── test_exercise_detection.py
-│   ├── test_visualization.py
-│   └── ...
+├── ui/                     # Interfaces de usuario
+│   ├── main_window.py      # Ventana principal de la aplicación
+│   ├── exercise_window.py  # Ventana de seguimiento de ejercicios
+│   └── __init__.py
 │
-├── requirements.txt
-└── README.md
-└── SETTINGS.md
+├── core/                   # Funcionalidades principales de la aplicación
+│   ├── exercise.py         # Lógica relacionada con los ejercicios
+│   ├── routine.py          # Gestión de las rutinas de ejercicios
+│   └── __init__.py
+│
+├── detection/              # Módulos relacionados con la detección y seguimiento de poses
+│   ├── pose_estimation.py  # Lógica de estimación de poses utilizando OpenCV y el modelo MobileNet
+│   ├── camera.py           # Manejo de la cámara
+│   └── __init__.py
+│
+└── utils/                  # Utilidades y funciones auxiliares
+    ├── helpers.py          # Funciones de ayuda generales
+    └── __init__.py
+
+
 ```
 
 ### Tecnologies and tools
