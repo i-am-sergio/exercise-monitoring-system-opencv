@@ -1,3 +1,6 @@
+import sys
+from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget
+from PyQt5.QtGui import QImage, QPixmap
 import cv2
 import tensorflow as tf
 import numpy as np
@@ -26,17 +29,24 @@ EDGES = {
     (14, 16): 'c'
 }
 
-class ShowWindow:
+class ShowWindow(QMainWindow):
     def __init__(self, video_source=0):
+        super().__init__()
+        self.video_source = video_source
         self.cap = cv2.VideoCapture(video_source)
         if not self.cap.isOpened():
             raise ValueError(f"Error opening video source: {video_source}")
-        
-    
+
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        self.layout = QVBoxLayout()
+        self.central_widget.setLayout(self.layout)
+        self.label = QLabel()
+        self.layout.addWidget(self.label)
+
     def __del__(self):
         self.cap.release()
-        cv2.destroyAllWindows()
-    
+
     def draw_keypoints(self, frame, keypoints, confidence_threshold):
         y, x, _ = frame.shape
         shaped = np.squeeze(np.multiply(keypoints, [y,x,1]))
@@ -57,6 +67,14 @@ class ShowWindow:
             
             if (c1 > confidence_threshold) & (c2 > confidence_threshold):      
                 cv2.line(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0,0,255), 2)
+
+    def show_frame(self, frame):
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        h, w, ch = frame_rgb.shape
+        bytes_per_line = ch * w
+        q_img = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        pixmap = QPixmap.fromImage(q_img)
+        self.label.setPixmap(pixmap)
 
     def show(self):
         while self.cap.isOpened():
@@ -80,14 +98,16 @@ class ShowWindow:
             self.draw_connections(frame, keypoints_with_scores, EDGES, 0.4)
             self.draw_keypoints(frame, keypoints_with_scores, 0.4)
 
-            cv2.imshow('MoveNet Lightning', frame)
+            self.show_frame(frame)
 
-            if cv2.waitKey(10) & 0xFF==ord('q'):
-                break
+            # if cv2.waitKey(10) & 0xFF==ord('q'):
+            #     break
 
-            if cv2.getWindowProperty('MoveNet Lightning', cv2.WND_PROP_VISIBLE) < 1:
-                break
+            # if cv2.getWindowProperty('MoveNet Lightning', cv2.WND_PROP_VISIBLE) < 1:
+            #     break
 
 if __name__ == '__main__':
+    app = QApplication(sys.argv)
     sw = ShowWindow()
     sw.show()
+    sys.exit(app.exec_())

@@ -5,3 +5,4 @@ venv/**
 *.tflite
 **_pycache_**
 **.mp4
+mmm/**
