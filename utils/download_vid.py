@@ -2,18 +2,18 @@ from pytube import YouTube
 import moviepy.editor as mp
 
 # URL del video de YouTube
-url = 'https://www.youtube.com/watch?v=jKTxe236-4U'
+url = 'https://www.youtube.com/watch?v=HR_1AqBmVAU'
 
 # Rango de tiempo en segundos (inicio, final)
-start_time = 58  # Minuto 0:58 (120 segundos)
-end_time = 68  # Minuto 1:08 (150 segundos)
+start_time = 4  # Minuto 0:58 (120 segundos)
+end_time = 18  # Minuto 1:08 (150 segundos)
 
 # Crea un objeto YouTube
 yt = YouTube(url)
 
 # Descarga el video completo (temporal)
 # video = yt.streams.first()
-video = yt.streams.get_lowest_resolution()
+video = yt.streams.get_highest_resolution()
 video.download(filename="video_completo.mp4")
 
 # Abre el video completo
