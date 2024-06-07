@@ -13,7 +13,7 @@ yt = YouTube(url)
 
 # Descarga el video completo (temporal)
 # video = yt.streams.first()
-video = yt.streams.get_lowest_resolution()
+video = yt.streams.get_highest_resolution()
 video.download(filename="video_completo.mp4")
 
 # Abre el video completo
