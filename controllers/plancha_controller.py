@@ -3,11 +3,11 @@ import cv2
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt, QTimer
-from detection.movenet_thunder import BaseController 
+from detection.movenet_thunder import ShowWindow 
 import numpy as np
 import tensorflow as tf
 
-class PlanchaController(BaseController):
+class PlanchaController(ShowWindow):
     def __init__(self):
         super().__init__('resources/models/thunder.tflite', 'detection/flexion_fragment.mp4')
 

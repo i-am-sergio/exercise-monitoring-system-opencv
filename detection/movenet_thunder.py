@@ -34,7 +34,7 @@ EDGES = {
 }
 
 
-class BaseController:
+class ShowWindow:
     def __init__(self, model_path, video_path):
         self.app = QApplication(sys.argv)
         self.window = QMainWindow()
