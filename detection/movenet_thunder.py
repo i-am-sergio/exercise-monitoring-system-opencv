@@ -9,8 +9,6 @@ import numpy as np
 
 from PyQt5.QtCore import Qt, QTimer
 
-interpreter = tf.lite.Interpreter(model_path='resources/models/thunder.tflite')
-interpreter.allocate_tensors()
 
 EDGES = {
     (0, 1): 'm',
@@ -36,7 +34,7 @@ EDGES = {
 
 class ShowWindow:
     def __init__(self, model_path, video_path):
-        self.app = QApplication(sys.argv)
+    
         self.window = QMainWindow()
         self.window.setWindowTitle("Exercices Opencv + Qt")
         self.window.resize(1200, 700)
@@ -79,13 +77,6 @@ class ShowWindow:
         self.incorrect_repetitions = 0
         self.previous_state = None
         self.video_path = video_path
-
-        self.window.closeEvent = self.closeEvent
-
-    def closeEvent(self, event):
-        self.timer.stop()
-        self.cap.release()
-        self.app.quit()
 
 
     def show(self):
@@ -181,3 +172,9 @@ class ShowWindow:
         pixmap = QPixmap.fromImage(q_image)
         self.video_label.setPixmap(pixmap)
         self.window.show()
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    sw = ShowWindow()
+    sw.show_window()
+    sys.exit(app.exec_())
