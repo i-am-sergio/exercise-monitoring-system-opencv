@@ -3,9 +3,30 @@ import tensorflow as tf
 import numpy as np
 from detection.movenet_thunder import ShowWindow
 
+EDGES = {
+    (0, 1): 'm',
+    (0, 2): 'c',
+    (1, 3): 'm',
+    (2, 4): 'c',
+    (0, 5): 'm',
+    (0, 6): 'c',
+    (5, 7): 'm',
+    (7, 9): 'm',
+    (6, 8): 'c',
+    (8, 10): 'c',   
+    (5, 6): 'y',
+    (5, 11): 'm',
+    (6, 12): 'c',
+    (11, 12): 'y',
+    (11, 13): 'm',
+    (13, 15): 'm',
+    (12, 14): 'c',
+    (14, 16): 'c'
+}
+
 class EstocadaController(ShowWindow):
     def __init__(self):
-        super().__init__(video_source="detection/video_completo.mp4", model_path="resources/models/thunder.tflite")
+        super().__init__('resources/models/thunder.tflite', 'detection/video_completo.mp4')
         self.rep_count = 0
         self.initiated = False
     
@@ -25,7 +46,7 @@ class EstocadaController(ShowWindow):
         
         return angle
     
-    def check_lunge(self, keypoints):
+    def check_exercise(self, keypoints):
         left_hip = keypoints[11][:2]
         left_knee = keypoints[13][:2]
         left_ankle = keypoints[15][:2]
@@ -41,47 +62,12 @@ class EstocadaController(ShowWindow):
             # Check if the lunge is starting
             if 150 <= left_knee_angle <= 180 and 140 <= left_hip_angle <= 180:
                 self.initiated = True
-                return "Starting Lunge"
+                return False  # Lunge started, so return False
         else:
             # Check if the lunge is complete
             if 70 <= left_knee_angle <= 110:
                 self.initiated = False
                 self.rep_count += 1
-                return "Lunge Complete"
+                return True  # Lunge complete, so return True
         
-        return "Not a Lunge"
-    
-    def draw_feedback(self, frame, lunge_status):
-        text = lunge_status
-        color = (0, 255, 0) if lunge_status == "Lunge Complete" else (0, 0, 255)
-        cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
-        cv2.putText(frame, f'Reps: {self.rep_count}', (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-    
-    def annotate_frame(self, frame, keypoints_with_scores):
-        keypoints = keypoints_with_scores[0][0]
-        lunge_status = self.check_lunge(keypoints)
-        
-        self.draw_connections(frame, keypoints_with_scores, self.edges, 0.4)
-        self.draw_keypoints(frame, keypoints_with_scores, 0.4)
-        self.draw_feedback(frame, lunge_status)
-
-    def show(self):
-        while self.cap.isOpened():
-            ret, frame = self.cap.read()
-            if not ret:
-                break
-
-            keypoints_with_scores = self.process_frame(frame)
-
-            self.annotate_frame(frame, keypoints_with_scores)
-
-            cv2.imshow('Estocada Detection', frame)
-
-            if cv2.waitKey(10) & 0xFF == ord('q'):
-                break
-
-            if cv2.getWindowProperty('Estocada Detection', cv2.WND_PROP_VISIBLE) < 1:
-                break
-
-        self.cap.release()
-        cv2.destroyAllWindows()
+        return False  # Not a lunge, so return False
