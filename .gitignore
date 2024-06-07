@@ -5,4 +5,3 @@ venv/**
 *.tflite
 **_pycache_**
 **.mp4
-utils/download_vid.py
