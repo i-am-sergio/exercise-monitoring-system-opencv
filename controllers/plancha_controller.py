@@ -9,7 +9,7 @@ import tensorflow as tf
 
 class PlanchaController(ShowWindow):
     def __init__(self):
-        super().__init__('resources/models/thunder.tflite', 'detection/flexion_fragment.mp4')
+        super().__init__('resources/models/thunder.tflite', 'detection/video_completo.mp4')
 
     def calculate_angle(self, a, b, c):
         a = np.array(a)
