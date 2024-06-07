@@ -18,12 +18,12 @@ class MainController(QMainWindow):
         self.set_button_styles()
 
         # Connect buttons to their respective exercises
-        # self.ui.sentadilla_btn.clicked.connect(self.open_sentadilla_exercise)
-        # self.ui.biceps_btn.clicked.connect(self.open_biceps_exercise)
-        # self.ui.estocada_btn.clicked.connect(self.open_estocada_exercise)
-        # self.ui.abdominal_btn.clicked.connect(self.open_abdominal_exercise)
+        self.ui.sentadilla_btn.clicked.connect(self.open_sentadilla_exercise)
+        self.ui.biceps_btn.clicked.connect(self.open_biceps_exercise)
+        self.ui.estocada_btn.clicked.connect(self.open_estocada_exercise)
+        self.ui.abdominal_btn.clicked.connect(self.open_abdominal_exercise)
         self.ui.plancha_btn.clicked.connect(self.open_plancha_exercise)
-        # self.ui.estocada_btn.clicked.connect(self.open_estocada_exercise)
+        self.ui.estocada_btn.clicked.connect(self.open_estocada_exercise)
 
     def set_button_styles(self):
         controller_dir = os.path.dirname(os.path.abspath(__file__))
@@ -103,21 +103,21 @@ class MainController(QMainWindow):
         self.ui.estocada_btn.setStyleSheet(estocada_btn_stylesheet)
         self.ui.abdominal_btn.setStyleSheet(abdominal_btn_stylesheet)
         self.ui.plancha_btn.setStyleSheet(plancha_btn_stylesheet)
-    # def open_sentadilla_exercise(self):
-    #     self.sentadilla_window = SentadillaController()
-    #     self.sentadilla_window.show()
+    def open_sentadilla_exercise(self):
+        self.sentadilla_window = SentadillaController()
+        self.sentadilla_window.show()
 
-    # def open_estocada_exercise(self):
-    #     self.estocada_window = EstocadaController()
-    #     self.estocada_window.show()
+    def open_estocada_exercise(self):
+        self.estocada_window = EstocadaController()
+        self.estocada_window.show()
 
-    # def open_biceps_exercise(self):
-    #     self.biceps_window = CurlBicepController()
-    #     self.biceps_window.show()
+    def open_biceps_exercise(self):
+        self.biceps_window = CurlBicepController()
+        self.biceps_window.show()
     
-    # def open_abdominal_exercise(self):
-    #     self.abdominal_window = AbdominalController()
-    #     self.abdominal_window.show()
+    def open_abdominal_exercise(self):
+        self.abdominal_window = AbdominalController()
+        self.abdominal_window.show()
 
     def open_plancha_exercise(self):
         self.plancha_window = PlanchaController()
