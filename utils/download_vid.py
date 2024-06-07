@@ -2,11 +2,11 @@ from pytube import YouTube
 import moviepy.editor as mp
 
 # URL del video de YouTube
-url = 'https://www.youtube.com/watch?v=44JzAk3rvRM'
+url = 'https://www.youtube.com/watch?v=jKTxe236-4U'
 
 # Rango de tiempo en segundos (inicio, final)
-start_time = 64  # Minuto 0:58 (120 segundos)
-end_time = 76  # Minuto 1:08 (150 segundos)
+start_time = 58  # Minuto 0:58 (120 segundos)
+end_time = 68  # Minuto 1:08 (150 segundos)
 
 # Crea un objeto YouTube
 yt = YouTube(url)
