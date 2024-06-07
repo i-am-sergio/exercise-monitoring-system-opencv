@@ -31,7 +31,12 @@ EDGES = {
     (14, 16): 'c'
 }
 
-
+COLOR_MAP = {
+    'm': (255, 0, 255),  # Magenta
+    'c': (0, 255, 255),  # Cyan
+    'y': (255, 255, 0),  # Yellow
+    # Agrega más colores según sea necesario
+}
 class ShowWindow:
     def __init__(self, model_path, video_path):
     
@@ -141,17 +146,21 @@ class ShowWindow:
     def draw_predictions_on_image(self, frame, keypoints_with_scores, crop_region=None):
         height, width, _ = frame.shape
 
+        # Obtiene los keypoints, bordes y colores según la función _keypoints_and_edges_for_display
         (keypoint_locs, keypoint_edges, edge_colors) = self._keypoints_and_edges_for_display(keypoints_with_scores, height, width)
 
+        # Itera sobre los bordes y colores para dibujarlos en el marco
         for edge, color in zip(keypoint_edges, edge_colors):
             start_point = (int(edge[0][0]), int(edge[0][1]))
             end_point = (int(edge[1][0]), int(edge[1][1]))
-            cv2.line(frame, start_point, end_point, (0, 0, 255), 2)  # Cambia 'color' por el color deseado
+            cv2.line(frame, start_point, end_point, COLOR_MAP[color], 2)  # Usa el color del diccionario
 
+        # Dibuja los puntos clave en el marco
         for kp_loc in keypoint_locs:
             center = (int(kp_loc[0]), int(kp_loc[1]))
-            cv2.circle(frame, center, 4, (0, 255, 0), -1)
+            cv2.circle(frame, center, 4, (0, 255, 0), -1)  # Usa el color verde para los puntos clave
 
+        # Dibuja el rectángulo de recorte si se proporciona la región de recorte
         if crop_region is not None:
             xmin = max(crop_region['x_min'] * width, 0.0)
             ymin = max(crop_region['y_min'] * height, 0.0)
@@ -159,9 +168,9 @@ class ShowWindow:
             rec_height = min(crop_region['y_max'], 0.99) * height - ymin
             start_point = (int(xmin), int(ymin))
             end_point = (int(xmin + rec_width), int(ymin + rec_height))
-            cv2.rectangle(frame, start_point, end_point, (255, 0, 0), 1)
-        
-        return frame  # Devuelve el marco modificado
+            cv2.rectangle(frame, start_point, end_point, (255, 0, 0), 1)  # Usa el color rojo para el rectángulo
+
+        return frame 
 
     def update_window(self):
         ret, frame = self.cap.read()
