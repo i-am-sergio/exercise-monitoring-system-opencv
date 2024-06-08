@@ -1,9 +1,14 @@
+import sys
+from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget, QGridLayout,  QPushButton
+from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtCore import Qt, QTimer
+
 import cv2
 import tensorflow as tf
 import numpy as np
+import time
+from PyQt5.QtCore import Qt, QTimer
 
-interpreter = tf.lite.Interpreter(model_path='resources/models/thunder.tflite')
-interpreter.allocate_tensors()
 
 EDGES = {
     (0, 1): 'm',
@@ -15,7 +20,7 @@ EDGES = {
     (5, 7): 'm',
     (7, 9): 'm',
     (6, 8): 'c',
-    (8, 10): 'c',
+    (8, 10): 'c',   
     (5, 6): 'y',
     (5, 11): 'm',
     (6, 12): 'c',
@@ -26,100 +31,231 @@ EDGES = {
     (14, 16): 'c'
 }
 
+COLOR_MAP = {
+    'm': (255, 0, 255),  # Magenta
+    'c': (0, 255, 255),  # Cyan
+    'y': (255, 255, 0),  # Yellow
+}
 class ShowWindow:
-    def __init__(self):
-        self.cap = cv2.VideoCapture(0)
+    def __init__(self, model_path="resources/models/model.tflite", video_path=0):
     
-    def __del__(self):
-        self.cap.release()
-        cv2.destroyAllWindows()
-    
-    def draw_keypoints(self, frame, keypoints, confidence_threshold):
-        y, x, _ = frame.shape
-        shaped = np.squeeze(np.multiply(keypoints, [y,x,1]))
+        self.window = QMainWindow()
+        self.window.setWindowTitle("Exercices Opencv + Qt")
+        self.window.resize(1200, 700)
+        central_widget = QWidget()
+        self.window.setCentralWidget(central_widget)  # Utiliza setCentralWidget en lugar de crear otro widget central
 
-        for kp in shaped:
-            ky, kx, kp_conf = kp
-            if kp_conf > confidence_threshold:
-                cv2.circle(frame, (int(kx), int(ky)), 4, (0,255,0), -1)
-    
-    def draw_connections(self, frame, keypoints, edges, confidence_threshold):
-        y, x, _ = frame.shape
-        shaped = np.squeeze(np.multiply(keypoints, [y,x,1]))
-        
-        for edge, _ in edges.items():
-            p1, p2 = edge
-            y1, x1, c1 = shaped[p1]
-            y2, x2, c2 = shaped[p2]
-            
-            if (c1 > confidence_threshold) & (c2 > confidence_threshold):      
-                cv2.line(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0,0,255), 2)
+        # Layout de cuadrícula
+        grid_layout = QGridLayout(central_widget)
+        grid_layout.setColumnStretch(0, 3)  # Columna 0 con tamaño 3
+        grid_layout.setColumnStretch(1, 1)  # Columna 1 con tamaño 1
+        grid_layout.setRowStretch(0, 1)  # Fila 0 con tamaño 1
+
+        # Contenedor 1
+        self.main_widget = QWidget()
+        self.layout = QVBoxLayout(self.main_widget)
+        self.video_label = QLabel("Video Label")
+        self.video_label.setAlignment(Qt.AlignCenter) 
+        self.layout.addWidget(self.video_label)
+        self.main_widget.setStyleSheet('background-color: red')
+        grid_layout.addWidget(self.main_widget, 0, 0, alignment=Qt.AlignCenter)
+
+
+        # Contenedor 2 con QVBoxLayout
+        second_widget = QWidget()
+        second_layout = QVBoxLayout(second_widget)
+        grid_layout.addWidget(second_widget, 0, 1)
+
+
+        # Etiquetas en el segundo contenedor
+
+        exit_button = QPushButton("Salir")
+        exit_button.clicked.connect(self.exit_application)
+        self.feedback_label = QLabel()
+        self.correct_label = QLabel()
+        self.incorrect_label = QLabel()
+        self.state_label = QLabel()
+        self.feedback_label.setText("Inicio")
+        second_layout.addWidget(self.feedback_label)
+        self.correct_label.setText("Correctos: 0")
+        second_layout.addWidget(self.correct_label)
+        self.incorrect_label.setText("Incorrectos: 0")
+        second_layout.addWidget(self.incorrect_label)
+        second_layout.addWidget(exit_button)
+        self.state_label.setText("Estado: 0")
+        second_layout.addWidget(self.state_label)
+
+        self.interpreter = tf.lite.Interpreter(model_path=model_path)
+        self.interpreter.allocate_tensors()
+        self.edges = [
+            (0, 1), (0, 2), (1, 3), (2, 4), (0, 5), (0, 6), (5, 7),
+            (7, 9), (6, 8), (8, 10), (5, 6), (5, 11), (6, 12),
+            (11, 12), (11, 13), (13, 15), (12, 14), (14, 16)
+        ]
+        self.edge_colors = [
+            (255, 0, 0), (0, 255, 0), (255, 0, 0), (0, 255, 0), 
+            (255, 0, 0), (0, 255, 0), (255, 0, 0), (255, 0, 0),
+            (0, 255, 0), (0, 255, 0), (0, 255, 255), (255, 0, 0),
+            (0, 255, 0), (0, 255, 255), (255, 0, 0), (255, 0, 0),
+            (0, 255, 0), (0, 255, 0)
+        ]
+        input_details = self.interpreter.get_input_details()
+        self.input_shape = input_details[0]['shape']
+
+        self.correct_repetitions = 0
+        self.incorrect_repetitions = 0
+        self.previous_state = None
+        self.initiated = False
+        self.video_path = video_path
+
+    def exit_application(self):
+            self.cap.release()
+            self.timer.stop()
+            self.window.close()
+
+    def __del__(self):
+        try:
+            self.cap.release()
+        except AttributeError:
+            pass
+        try:
+            self.timer.stop()
+        except AttributeError:
+            pass
 
     def show(self):
-        while self.cap.isOpened():
-            ret, frame = self.cap.read()
+        self.cap = cv2.VideoCapture(self.video_path)
+        if not self.cap.isOpened():
+            print("Error: No se pudo abrir el video.")
+            return
 
-            # Reshape image
-            img = frame.copy()
-            img = tf.image.resize_with_pad(np.expand_dims(img, axis=0), 256,256)
-            input_image = tf.cast(img, dtype=tf.float32)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_window)
+        self.timer.start(16)
 
-            # Setup input and output 
-            input_details = interpreter.get_input_details()
-            output_details = interpreter.get_output_details()
+    
+    def get_keypoints(self, image):
+        input_image = tf.image.resize(image, (self.input_shape[1], self.input_shape[2]))
+        input_image = tf.cast(input_image, dtype=tf.uint8)
+        input_image = tf.expand_dims(input_image, axis=0)
+        self.interpreter.set_tensor(self.interpreter.get_input_details()[0]['index'], input_image)
+        self.interpreter.invoke()
+        keypoints_with_scores = self.interpreter.get_tensor(self.interpreter.get_output_details()[0]['index'])
+        return keypoints_with_scores
+    
 
-            # Make predictions 
-            interpreter.set_tensor(input_details[0]['index'], np.array(input_image))
-            interpreter.invoke()
-            keypoints_with_scores = interpreter.get_tensor(output_details[0]['index'])
+    def draw_predictions_on_image(self, image, keypoints_with_scores, keypoint_threshold=0.11):
+        height, width, _ = image.shape
+        keypoints = keypoints_with_scores[0, 0, :, :2]
+        keypoints_scores = keypoints_with_scores[0, 0, :, 2]
 
-            # Rendering 
-            self.draw_connections(frame, keypoints_with_scores, EDGES, 0.4)
-            self.draw_keypoints(frame, keypoints_with_scores, 0.4)
+        for idx, ((start, end), color) in enumerate(zip(self.edges, self.edge_colors)):
+            if keypoints_scores[start] > keypoint_threshold and keypoints_scores[end] > keypoint_threshold:
+                start_point = (int(keypoints[start, 1] * width), int(keypoints[start, 0] * height))
+                end_point = (int(keypoints[end, 1] * width), int(keypoints[end, 0] * height))
+                cv2.line(image, start_point, end_point, color, 2)
+        for i in range(keypoints.shape[0]):
+            if keypoints_scores[i] > keypoint_threshold:
+                center = (int(keypoints[i, 1] * width), int(keypoints[i, 0] * height))
+                cv2.circle(image, center, 3, (0, 0, 255), -1)
+        return image
 
-            cv2.imshow('MoveNet Lightning', frame)
+    def show_image(self, image):
+        # Obtener las dimensiones de la imagen y del contenedor
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image_height, image_width, _ = image_rgb.shape
+        container_height, container_width = self.video_label.height(), self.video_label.width()
 
-            if cv2.waitKey(10) & 0xFF==ord('q'):
-                break
+        # Calcular la relación de aspecto de la imagen y del contenedor
+        image_aspect_ratio = image_width / image_height
+        container_aspect_ratio = container_width / container_height
 
-            if cv2.getWindowProperty('MoveNet Lightning', cv2.WND_PROP_VISIBLE) < 1:
-                break
+        # Ajustar la imagen al contenedor manteniendo la relación de aspecto
+        if image_aspect_ratio > container_aspect_ratio:
+            # La imagen es más ancha que el contenedor, ajustar la altura
+            new_height = container_height
+            new_width = int(container_height * image_aspect_ratio)
+        else:
+            # La imagen es más alta que el contenedor, ajustar la anchura
+            new_width = container_width
+            new_height = int(container_width / image_aspect_ratio)
+
+        # Redimensionar la imagen
+        resized_image = cv2.resize(image_rgb, (new_width, new_height))
+
+        # Convertir la imagen redimensionada a QImage
+        bytes_per_line = 3 * new_width
+        q_image = QImage(resized_image.data, new_width, new_height, bytes_per_line, QImage.Format_RGB888)
+
+        # Convertir QImage a QPixmap y establecerlo en el QLabel
+        pixmap = QPixmap.fromImage(q_image)
+        self.video_label.setPixmap(pixmap)
+        self.window.show()
+
+    def update_window(self):
+        ret, frame = self.cap.read()
+        if not ret:
+            self.timer.stop()
+            self.cap.release()
+            return
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        keypoints_with_scores = self.get_keypoints(frame_rgb)
+        keypoints = keypoints_with_scores[0][0]
+        state = self.check_exercise(keypoints)
+
+        if self.previous_state is None:
+            self.previous_state = state
+        else:
+            if state == 3 and self.previous_state != 3:
+                self.correct_repetitions += 1
+            elif state == 2 and self.previous_state != 2:
+                self.incorrect_repetitions += 1
+
+            self.show_feedback(state)
+            self.previous_state = state
+
+        output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores)
+        self.show_image(output_overlay)
+    
+    def show_image(self, image, new_height=500):
+        # Convertir la imagen a formato RGB
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        height, width, _ = image_rgb.shape
+        aspect_ratio = width / height
+        new_width = int(new_height * aspect_ratio)
+        resized_image_rgb = cv2.resize(image_rgb, (new_width, new_height))
+        q_image = QImage(resized_image_rgb.data, new_width, new_height, 3 * new_width, QImage.Format_RGB888)
+
+        pixmap = QPixmap.fromImage(q_image)
+
+        self.video_label.setPixmap(pixmap)
+        self.window.show()
+
+
+    def show_feedback(self, state):
+        if state == 3:
+            text = "Correcto"
+            color = "green"
+        elif state == 2:
+            text = "Incorrecto"
+            color = "red"
+        else:
+            text = "Reposo"
+            color = "black"
+
+        self.feedback_label.setText(text)
+        self.feedback_label.setStyleSheet(f"color: {color}; font-size: 18px; font-weight: bold;")
+        self.feedback_label.show()
+
+        self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
+        self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
+        self.state_label.setText(f"Estado: {state}")
+        self.state_label.show()
+        self.correct_label.show()
+        self.incorrect_label.show()
 
 if __name__ == '__main__':
+    app = QApplication(sys.argv)
     sw = ShowWindow()
-    sw.show()
-
-
-
-# cap = cv2.VideoCapture(0)
-# while cap.isOpened():
-#     ret, frame = cap.read()
-    
-#     # Reshape image
-#     img = frame.copy()
-#     img = tf.image.resize_with_pad(np.expand_dims(img, axis=0), 256,256)
-#     input_image = tf.cast(img, dtype=tf.float32)
-    
-#     # Setup input and output 
-#     input_details = interpreter.get_input_details()
-#     output_details = interpreter.get_output_details()
-    
-#     # Make predictions 
-#     interpreter.set_tensor(input_details[0]['index'], np.array(input_image))
-#     interpreter.invoke()
-#     keypoints_with_scores = interpreter.get_tensor(output_details[0]['index'])
-    
-#     # Rendering 
-#     draw_connections(frame, keypoints_with_scores, EDGES, 0.4)
-#     draw_keypoints(frame, keypoints_with_scores, 0.4)
-    
-#     cv2.imshow('MoveNet Lightning', frame)
-    
-#     if cv2.waitKey(10) & 0xFF==ord('q'):
-#         break
-
-#     if cv2.getWindowProperty('MoveNet Lightning', cv2.WND_PROP_VISIBLE) < 1:
-#         break
-        
-# cap.release()
-# cv2.destroyAllWindows()
+    sw.show_window()
+    sys.exit(app.exec_())

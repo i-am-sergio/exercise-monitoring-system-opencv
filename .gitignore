@@ -1,7 +1,8 @@
 build
 python
+.vscode
 *.exe
+venv
 venv/**
-*.tflite
 **_pycache_**
 **.mp4
