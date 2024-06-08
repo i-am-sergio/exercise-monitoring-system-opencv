@@ -1,12 +1,12 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget, QGridLayout
+from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget, QGridLayout,  QPushButton
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import Qt, QTimer
 
 import cv2
 import tensorflow as tf
 import numpy as np
-
+import time
 from PyQt5.QtCore import Qt, QTimer
 
 
@@ -36,8 +36,30 @@ COLOR_MAP = {
     'c': (0, 255, 255),  # Cyan
     'y': (255, 255, 0),  # Yellow
 }
+
+# Dictionary that maps from joint names to keypoint indices.
+KEYPOINT_DICT = {
+    'nose': 0,
+    'left_eye': 1,
+    'right_eye': 2,
+    'left_ear': 3,
+    'right_ear': 4,
+    'left_shoulder': 5,
+    'right_shoulder': 6,
+    'left_elbow': 7,
+    'right_elbow': 8,
+    'left_wrist': 9,
+    'right_wrist': 10,
+    'left_hip': 11,
+    'right_hip': 12,
+    'left_knee': 13,
+    'right_knee': 14,
+    'left_ankle': 15,
+    'right_ankle': 16
+}
+
 class ShowWindow:
-    def __init__(self, model_path, video_path):
+    def __init__(self, model_path="resources/models/model.tflite", video_path=0):
     
         self.window = QMainWindow()
         self.window.setWindowTitle("Exercices Opencv + Qt")
@@ -66,21 +88,61 @@ class ShowWindow:
         second_layout = QVBoxLayout(second_widget)
         grid_layout.addWidget(second_widget, 0, 1)
 
+
         # Etiquetas en el segundo contenedor
+
+        exit_button = QPushButton("Salir")
+        exit_button.clicked.connect(self.exit_application)
         self.feedback_label = QLabel()
         self.correct_label = QLabel()
         self.incorrect_label = QLabel()
+        self.state_label = QLabel()
+        self.feedback_label.setText("Inicio")
         second_layout.addWidget(self.feedback_label)
+        self.correct_label.setText("Correctos: 0")
         second_layout.addWidget(self.correct_label)
+        self.incorrect_label.setText("Incorrectos: 0")
         second_layout.addWidget(self.incorrect_label)
+        second_layout.addWidget(exit_button)
+        self.state_label.setText("Estado: 0")
+        second_layout.addWidget(self.state_label)
 
         self.interpreter = tf.lite.Interpreter(model_path=model_path)
         self.interpreter.allocate_tensors()
+        self.edges = [
+            (0, 1), (0, 2), (1, 3), (2, 4), (0, 5), (0, 6), (5, 7),
+            (7, 9), (6, 8), (8, 10), (5, 6), (5, 11), (6, 12),
+            (11, 12), (11, 13), (13, 15), (12, 14), (14, 16)
+        ]
+        self.edge_colors = [
+            (255, 0, 0), (0, 255, 0), (255, 0, 0), (0, 255, 0), 
+            (255, 0, 0), (0, 255, 0), (255, 0, 0), (255, 0, 0),
+            (0, 255, 0), (0, 255, 0), (0, 255, 255), (255, 0, 0),
+            (0, 255, 0), (0, 255, 255), (255, 0, 0), (255, 0, 0),
+            (0, 255, 0), (0, 255, 0)
+        ]
+        input_details = self.interpreter.get_input_details()
+        self.input_shape = input_details[0]['shape']
 
         self.correct_repetitions = 0
         self.incorrect_repetitions = 0
         self.previous_state = None
+        self.initiated = False
         self.video_path = video_path
+
+        # Diccionario de ejercicios
+        self.exercise_keypoints = {
+            'bicep_curl': {
+                'keypoints': [5, 6, 7, 8, 9, 10],  # Shoulder, Elbow, Wrist for both arms
+                'edges': [(5, 7), (7, 9), (6, 8), (8, 10)]  # Edges for both arms
+            }
+            # Puedes añadir más ejercicios aquí
+        }
+
+    def exit_application(self):
+            self.cap.release()
+            self.timer.stop()
+            self.window.close()
 
     def __del__(self):
         try:
@@ -103,82 +165,72 @@ class ShowWindow:
         self.timer.start(16)
 
     
-    def get_keypoints(self, frame, input_size=256 ):
-
-        img = frame.copy()
-        img = tf.image.resize_with_pad(np.expand_dims(img, axis=0), input_size, input_size)
-        input_image = tf.cast(img, dtype=tf.uint8)
-
-        input_details = self.interpreter.get_input_details()
-        output_details = self.interpreter.get_output_details()
-
-        self.interpreter.set_tensor(input_details[0]['index'], np.array(input_image))
+    def get_keypoints(self, image):
+        input_image = tf.image.resize(image, (self.input_shape[1], self.input_shape[2]))
+        input_image = tf.cast(input_image, dtype=tf.uint8)
+        input_image = tf.expand_dims(input_image, axis=0)
+        self.interpreter.set_tensor(self.interpreter.get_input_details()[0]['index'], input_image)
         self.interpreter.invoke()
-        keypoints_with_scores = self.interpreter.get_tensor(output_details[0]['index'])
+        keypoints_with_scores = self.interpreter.get_tensor(self.interpreter.get_output_details()[0]['index'])
         return keypoints_with_scores
     
-    def _keypoints_and_edges_for_display(self, keypoints_with_scores, height, width, keypoint_threshold=0.11):
-        keypoints_all = []
-        keypoint_edges_all = []
-        edge_colors = []
-        num_instances, _, _, _ = keypoints_with_scores.shape    
-        for idx in range(num_instances):
-            kpts_x = keypoints_with_scores[0, idx, :, 1]
-            kpts_y = keypoints_with_scores[0, idx, :, 0]
-            kpts_scores = keypoints_with_scores[0, idx, :, 2]
-            kpts_absolute_xy = np.stack([width * np.array(kpts_x), height * np.array(kpts_y)], axis=-1)
-            kpts_above_thresh_absolute = kpts_absolute_xy[kpts_scores > keypoint_threshold, :]
-            keypoints_all.append(kpts_above_thresh_absolute)
 
-            for edge_pair, color in EDGES.items():
-                if (kpts_scores[edge_pair[0]] > keypoint_threshold and
-                    kpts_scores[edge_pair[1]] > keypoint_threshold):
-                    x_start = kpts_absolute_xy[edge_pair[0], 0]
-                    y_start = kpts_absolute_xy[edge_pair[0], 1]
-                    x_end = kpts_absolute_xy[edge_pair[1], 0]
-                    y_end = kpts_absolute_xy[edge_pair[1], 1]
-                    line_seg = np.array([[x_start, y_start], [x_end, y_end]])
-                    keypoint_edges_all.append(line_seg)
-                    edge_colors.append(color)
-        if keypoints_all:
-            keypoints_xy = np.concatenate(keypoints_all, axis=0)
+    def draw_predictions_on_image(self, image, keypoints_with_scores, keypoint_threshold=0.11, exercise=None):
+        height, width, _ = image.shape
+        keypoints = keypoints_with_scores[0, 0, :, :2]
+        keypoints_scores = keypoints_with_scores[0, 0, :, 2]
+
+        if exercise and exercise in self.exercise_keypoints:
+            relevant_keypoints = self.exercise_keypoints[exercise]['keypoints']
+            relevant_edges = self.exercise_keypoints[exercise]['edges']
         else:
-            keypoints_xy = np.zeros((0, 17, 2))
+            relevant_keypoints = range(len(keypoints))
+            relevant_edges = self.edges
 
-        if keypoint_edges_all:
-            edges_xy = np.stack(keypoint_edges_all, axis=0)
+        for idx, ((start, end), color) in enumerate(zip(relevant_edges, self.edge_colors)):
+            if keypoints_scores[start] > keypoint_threshold and keypoints_scores[end] > keypoint_threshold:
+                start_point = (int(keypoints[start, 1] * width), int(keypoints[start, 0] * height))
+                end_point = (int(keypoints[end, 1] * width), int(keypoints[end, 0] * height))
+                cv2.line(image, start_point, end_point, color, 2)
+
+        for i in relevant_keypoints:
+            if keypoints_scores[i] > keypoint_threshold:
+                center = (int(keypoints[i, 1] * width), int(keypoints[i, 0] * height))
+                cv2.circle(image, center, 3, (0, 0, 255), -1)
+
+        return image
+
+    def show_image(self, image):
+        # Obtener las dimensiones de la imagen y del contenedor
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image_height, image_width, _ = image_rgb.shape
+        container_height, container_width = self.video_label.height(), self.video_label.width()
+
+        # Calcular la relación de aspecto de la imagen y del contenedor
+        image_aspect_ratio = image_width / image_height
+        container_aspect_ratio = container_width / container_height
+
+        # Ajustar la imagen al contenedor manteniendo la relación de aspecto
+        if image_aspect_ratio > container_aspect_ratio:
+            # La imagen es más ancha que el contenedor, ajustar la altura
+            new_height = container_height
+            new_width = int(container_height * image_aspect_ratio)
         else:
-            edges_xy = np.zeros((0, 2, 2))
-        return keypoints_xy, edges_xy, edge_colors
+            # La imagen es más alta que el contenedor, ajustar la anchura
+            new_width = container_width
+            new_height = int(container_width / image_aspect_ratio)
 
-    def draw_predictions_on_image(self, frame, keypoints_with_scores, crop_region=None):
-        height, width, _ = frame.shape
+        # Redimensionar la imagen
+        resized_image = cv2.resize(image_rgb, (new_width, new_height))
 
-        # Obtiene los keypoints, bordes y colores según la función _keypoints_and_edges_for_display
-        (keypoint_locs, keypoint_edges, edge_colors) = self._keypoints_and_edges_for_display(keypoints_with_scores, height, width)
+        # Convertir la imagen redimensionada a QImage
+        bytes_per_line = 3 * new_width
+        q_image = QImage(resized_image.data, new_width, new_height, bytes_per_line, QImage.Format_RGB888)
 
-        # Itera sobre los bordes y colores para dibujarlos en el marco
-        for edge, color in zip(keypoint_edges, edge_colors):
-            start_point = (int(edge[0][0]), int(edge[0][1]))
-            end_point = (int(edge[1][0]), int(edge[1][1]))
-            cv2.line(frame, start_point, end_point, COLOR_MAP[color], 2)  # Usa el color del diccionario
-
-        # Dibuja los puntos clave en el marco
-        for kp_loc in keypoint_locs:
-            center = (int(kp_loc[0]), int(kp_loc[1]))
-            cv2.circle(frame, center, 4, (0, 255, 0), -1)  # Usa el color verde para los puntos clave
-
-        # Dibuja el rectángulo de recorte si se proporciona la región de recorte
-        if crop_region is not None:
-            xmin = max(crop_region['x_min'] * width, 0.0)
-            ymin = max(crop_region['y_min'] * height, 0.0)
-            rec_width = min(crop_region['x_max'], 0.99) * width - xmin
-            rec_height = min(crop_region['y_max'], 0.99) * height - ymin
-            start_point = (int(xmin), int(ymin))
-            end_point = (int(xmin + rec_width), int(ymin + rec_height))
-            cv2.rectangle(frame, start_point, end_point, (255, 0, 0), 1)  # Usa el color rojo para el rectángulo
-
-        return frame 
+        # Convertir QImage a QPixmap y establecerlo en el QLabel
+        pixmap = QPixmap.fromImage(q_image)
+        self.video_label.setPixmap(pixmap)
+        self.window.show()
 
     def update_window(self):
         ret, frame = self.cap.read()
@@ -202,20 +254,46 @@ class ShowWindow:
                 self.incorrect_repetitions += 1
 
             self.show_feedback(is_correct)
-
-        output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores)
+        output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores, exercise='bicep_curl')
+        self.show_image(output_overlay)
         self.show_image(output_overlay)
     
-    def show_image(self, image):
+    def show_image(self, image, new_height=500):
+        # Convertir la imagen a formato RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         height, width, _ = image_rgb.shape
-        bytes_per_line = 3 * width
-        q_image = QImage(image_rgb.data, width, height, bytes_per_line, QImage.Format_RGB888)
+        aspect_ratio = width / height
+        new_width = int(new_height * aspect_ratio)
+        resized_image_rgb = cv2.resize(image_rgb, (new_width, new_height))
+        q_image = QImage(resized_image_rgb.data, new_width, new_height, 3 * new_width, QImage.Format_RGB888)
+
         pixmap = QPixmap.fromImage(q_image)
+
         self.video_label.setPixmap(pixmap)
         self.window.show()
 
+
     def show_feedback(self, is_correct):
+        # if state == 3:
+        #     text = "Correcto"
+        #     color = "green"
+        # elif state == 2:
+        #     text = "Incorrecto"
+        #     color = "red"
+        # else:
+        #     text = "Reposo"
+        #     color = "black"
+
+        # self.feedback_label.setText(text)
+        # self.feedback_label.setStyleSheet(f"color: {color}; font-size: 18px; font-weight: bold;")
+        # self.feedback_label.show()
+
+        # self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
+        # self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
+        # self.state_label.setText(f"Estado: {state}")
+        # self.state_label.show()
+        # self.correct_label.show()
+        # self.incorrect_label.show()
         if is_correct:
             text = "Correcto"
             color = "green"
@@ -231,7 +309,6 @@ class ShowWindow:
         self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
         self.correct_label.show()
         self.incorrect_label.show()
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
