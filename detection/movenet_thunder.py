@@ -120,6 +120,7 @@ class ShowWindow:
         self.correct_repetitions = 0
         self.incorrect_repetitions = 0
         self.previous_state = None
+        self.correct_state = False
         self.initiated = False
         self.video_path = video_path
 
@@ -216,18 +217,26 @@ class ShowWindow:
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         keypoints_with_scores = self.get_keypoints(frame_rgb)
         keypoints = keypoints_with_scores[0][0]
-        state = self.check_exercise(keypoints)
+        is_attempt = self.check_attempt(keypoints)
+        is_correct = self.check_exercise(keypoints)
+
 
         if self.previous_state is None:
-            self.previous_state = state
-        else:
-            if state == 3 and self.previous_state != 3:
-                self.correct_repetitions += 1
-            elif state == 2 and self.previous_state != 2:
-                self.incorrect_repetitions += 1
+            self.previous_state = is_attempt
 
-            self.show_feedback(state)
-            self.previous_state = state
+        elif self.previous_state == is_attempt:
+            if is_correct:
+                self.correct_state = True
+        elif self.previous_state != is_attempt:
+            self.previous_state = is_attempt
+            if not is_attempt:
+                if self.correct_state:
+                    self.correct_repetitions += 1
+                else :
+                    self.incorrect_repetitions += 1
+            self.correct_state = False
+
+            self.show_feedback(is_correct)
 
         output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores)
         self.show_image(output_overlay)
