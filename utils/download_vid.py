@@ -2,8 +2,9 @@ from pytube import YouTube
 import moviepy.editor as mp
 import os
 
+TEMP_VIDEO = "video_completo.mp4"
+
 def recortar_video(url, start_time, end_time, output_path):
-    # Crea un objeto YouTube
     yt = YouTube(url)
 
     name = "video_completo.mp4"
