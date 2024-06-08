@@ -6,6 +6,7 @@ from controllers.estocada_controller import EstocadaController
 from controllers.biceps_controller import CurlBicepController
 from controllers.abdominal_controller import AbdominalController 
 from controllers.plancha_controller import PlanchaController
+from controllers.jumps_controller import JumpsController
 import os
 
 class MainController(QMainWindow):
@@ -23,7 +24,7 @@ class MainController(QMainWindow):
         self.ui.estocada_btn.clicked.connect(self.open_estocada_exercise)
         self.ui.abdominal_btn.clicked.connect(self.open_abdominal_exercise)
         self.ui.plancha_btn.clicked.connect(self.open_plancha_exercise)
-        self.ui.estocada_btn.clicked.connect(self.open_estocada_exercise)
+        self.ui.jumps_btn.clicked.connect(self.open_jumps_exercise)
 
     def set_button_styles(self):
         img_dir2 = "./resources/2_lunge_btn.png"
@@ -31,6 +32,7 @@ class MainController(QMainWindow):
         img_dir3 = "./resources/3_biceps_btn.png"
         img_abs_dir = "./resources/6_abdominal_btn.png"
         img_flexion_dir = "./resources/5_flexion_btn.png"
+        img_jumps_dir = "./resources/4_jumping_jacks_btn.png"
 
         sentadilla_btn_stylesheet = f"""
         QPushButton#sentadilla_btn {{
@@ -90,6 +92,14 @@ class MainController(QMainWindow):
                             QPushButton#abdominal_btn:hover {{
                                 border-style: inset;
                             }}
+                            """
+        jumps_btn_stylesheet = f"""
+                            QPushButton#jumps_btn {{
+                                background-image: url('{img_jumps_dir}');
+                                background-repeat: no-repeat;
+                                background-position: center;
+                                border-style: outset;
+                            }}
                             """  
 
         self.ui.sentadilla_btn.setStyleSheet(sentadilla_btn_stylesheet)
@@ -97,6 +107,9 @@ class MainController(QMainWindow):
         self.ui.estocada_btn.setStyleSheet(estocada_btn_stylesheet)
         self.ui.abdominal_btn.setStyleSheet(abdominal_btn_stylesheet)
         self.ui.plancha_btn.setStyleSheet(plancha_btn_stylesheet)
+        self.ui.jumps_btn.setStyleSheet(jumps_btn_stylesheet)
+
+
     def open_sentadilla_exercise(self):
         self.sentadilla_window = SentadillaController()
         self.sentadilla_window.show()
@@ -116,3 +129,7 @@ class MainController(QMainWindow):
     def open_plancha_exercise(self):
         self.plancha_window = PlanchaController()
         self.plancha_window.show()
+
+    def open_jumps_exercise(self):
+        self.jumps_window = JumpsController()
+        self.jumps_window.show()

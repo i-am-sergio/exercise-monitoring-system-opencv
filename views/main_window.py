@@ -16,9 +16,6 @@ BUTTON_STYLE = (
     "    border-style: inset;"
     "}"
     ""
-    "QPushButton:hover {"
-    "    cursor: pointer;"
-    "}"
 )
 
 class UiMainWindow(object):
@@ -74,13 +71,13 @@ class UiMainWindow(object):
         self.abdominal_btn.setObjectName("abdominal_btn")
         self.grid_layout.addWidget(self.abdominal_btn, 1, 1, 1, 1)
         
-        self.elevaciones_btn = QtWidgets.QPushButton(self.widget_izq)
-        self.elevaciones_btn.setMinimumSize(QtCore.QSize(350, 210))
-        self.elevaciones_btn.setMaximumSize(QtCore.QSize(350, 210))
-        self.elevaciones_btn.setStyleSheet(BUTTON_STYLE)
-        self.elevaciones_btn.setText("")
-        self.elevaciones_btn.setObjectName("elevaciones_btn")
-        self.grid_layout.addWidget(self.elevaciones_btn, 3, 0, 1, 1)
+        self.jumps_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.jumps_btn.setMinimumSize(QtCore.QSize(350, 210))
+        self.jumps_btn.setMaximumSize(QtCore.QSize(350, 210))
+        self.jumps_btn.setStyleSheet(BUTTON_STYLE)
+        self.jumps_btn.setText("")
+        self.jumps_btn.setObjectName("jumps_btn")
+        self.grid_layout.addWidget(self.jumps_btn, 3, 0, 1, 1)
         
         self.plancha_btn = QtWidgets.QPushButton(self.widget_izq)
         self.plancha_btn.setMinimumSize(QtCore.QSize(350, 210))
