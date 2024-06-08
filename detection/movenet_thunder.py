@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget, QGridLayout
+from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget, QGridLayout,  QPushButton
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import Qt, QTimer
 
@@ -37,7 +37,7 @@ COLOR_MAP = {
     'y': (255, 255, 0),  # Yellow
 }
 class ShowWindow:
-    def __init__(self, model_path, video_path):
+    def __init__(self, model_path="resources/models/model.tflite", video_path=0):
     
         self.window = QMainWindow()
         self.window.setWindowTitle("Exercices Opencv + Qt")
@@ -66,21 +66,35 @@ class ShowWindow:
         second_layout = QVBoxLayout(second_widget)
         grid_layout.addWidget(second_widget, 0, 1)
 
+
         # Etiquetas en el segundo contenedor
+
+        exit_button = QPushButton("Salir")
+        exit_button.clicked.connect(self.exit_application)
         self.feedback_label = QLabel()
         self.correct_label = QLabel()
         self.incorrect_label = QLabel()
+        self.feedback_label.setText("Inicio")
         second_layout.addWidget(self.feedback_label)
+        self.correct_label.setText("Correctos: 0")
         second_layout.addWidget(self.correct_label)
+        self.incorrect_label.setText("Incorrectos: 0")
         second_layout.addWidget(self.incorrect_label)
+        second_layout.addWidget(exit_button)
 
         self.interpreter = tf.lite.Interpreter(model_path=model_path)
         self.interpreter.allocate_tensors()
+
 
         self.correct_repetitions = 0
         self.incorrect_repetitions = 0
         self.previous_state = None
         self.video_path = video_path
+
+    def exit_application(self):
+            self.cap.release()
+            self.timer.stop()
+            self.window.close()
 
     def __del__(self):
         try:
@@ -103,7 +117,7 @@ class ShowWindow:
         self.timer.start(16)
 
     
-    def get_keypoints(self, frame, input_size=256 ):
+    def get_keypoints(self, frame, input_size=256):
 
         img = frame.copy()
         img = tf.image.resize_with_pad(np.expand_dims(img, axis=0), input_size, input_size)
@@ -206,14 +220,20 @@ class ShowWindow:
         output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores)
         self.show_image(output_overlay)
     
-    def show_image(self, image):
+    def show_image(self, image, new_height=500):
+        # Convertir la imagen a formato RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         height, width, _ = image_rgb.shape
-        bytes_per_line = 3 * width
-        q_image = QImage(image_rgb.data, width, height, bytes_per_line, QImage.Format_RGB888)
+        aspect_ratio = width / height
+        new_width = int(new_height * aspect_ratio)
+        resized_image_rgb = cv2.resize(image_rgb, (new_width, new_height))
+        q_image = QImage(resized_image_rgb.data, new_width, new_height, 3 * new_width, QImage.Format_RGB888)
+
         pixmap = QPixmap.fromImage(q_image)
+
         self.video_label.setPixmap(pixmap)
         self.window.show()
+
 
     def show_feedback(self, is_correct):
         if is_correct:
