@@ -2,25 +2,21 @@ from pytube import YouTube
 import moviepy.editor as mp
 import os
 
+TEMP_VIDEO = "video_completo.mp4"
+
 def recortar_video(url, start_time, end_time, output_path):
-    # Crea un objeto YouTube
     yt = YouTube(url)
-
-    # Descarga el video completo (temporal)
     video = yt.streams.get_highest_resolution()
-    video.download(filename="video_completo.mp4")
-
-    # Abre el video completo
-    video_clip = mp.VideoFileClip("video_completo.mp4")
-
-    # Selecciona el fragmento
+    video.download(filename=TEMP_VIDEO)
+    video_clip = mp.VideoFileClip(TEMP_VIDEO)
     fragmento = video_clip.subclip(start_time, end_time)
-
-    # Guarda el fragmento como un nuevo archivo
-    fragmento.write_videofile(output_path)
-
-    # Elimina el archivo temporal del video completo
-    os.remove("video_completo.mp4")
+    fragmento.write_videofile(output_path, codec='libx264')
+    fragmento.close()
+    video_clip.close()
+    try:
+        os.remove(TEMP_VIDEO)
+    except PermissionError as e:
+        print(f"No se pudo eliminar el archivo temporal: {e}")
 
 # Array con los enlaces de los videos y los tiempos de inicio y final
 videos = [
