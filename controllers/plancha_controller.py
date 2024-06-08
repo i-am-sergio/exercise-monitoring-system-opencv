@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt, QTimer
 from detection.movenet_thunder import ShowWindow
 import numpy as np
 import tensorflow as tf
-
+import random
 class PlanchaController(ShowWindow):
     def __init__(self):
         super().__init__('resources/models/model.tflite', 'detection/flexion.mp4')
@@ -107,6 +107,14 @@ class PlanchaController(ShowWindow):
         return elbows_correct and hips_correct and knees_correct
 
     def check_exercise(self, keypoints):
+        indications = []
+        for i in range(3):  # Cambia este número según cuántas indicaciones desees agregar
+            name = f"Indicación {i+1}"
+            color = random.choice(["red", "green", "blue", "orange", "purple"])  # Colores aleatorios
+            indications.append({"name": name, "color": color})
+
+        # Llama a show_indications con las indicaciones generadas aleatoriamente
+        self.show_indications(indications)
         if self.in_initial_position:
             # Si está en la posición inicial, verificar si ha llegado a la posición final
             if self.check_final_position(keypoints):
