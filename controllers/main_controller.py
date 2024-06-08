@@ -111,8 +111,11 @@ class MainController(QMainWindow):
 
 
     def open_sentadilla_exercise(self):
-        self.sentadilla_window = SentadillaController()
-        self.sentadilla_window.show()
+        # self.sentadilla_window = SentadillaController()
+        # self.sentadilla_window.show()
+        
+        # run executable of c++
+        os.system("cd bin && ./TFLiteMoveNet")
 
     def open_estocada_exercise(self):
         self.estocada_window = EstocadaController()
