@@ -74,6 +74,7 @@ class ShowWindow:
         self.feedback_label = QLabel()
         self.correct_label = QLabel()
         self.incorrect_label = QLabel()
+        self.state_label = QLabel()
         self.feedback_label.setText("Inicio")
         second_layout.addWidget(self.feedback_label)
         self.correct_label.setText("Correctos: 0")
@@ -81,6 +82,8 @@ class ShowWindow:
         self.incorrect_label.setText("Incorrectos: 0")
         second_layout.addWidget(self.incorrect_label)
         second_layout.addWidget(exit_button)
+        self.state_label.setText("Estado: 0")
+        second_layout.addWidget(self.state_label)
 
         self.interpreter = tf.lite.Interpreter(model_path=model_path)
         self.interpreter.allocate_tensors()
