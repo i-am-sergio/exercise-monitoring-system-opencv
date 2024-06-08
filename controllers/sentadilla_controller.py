@@ -4,7 +4,7 @@ from detection.movenet_thunder import ShowWindow
 
 class SentadillaController(ShowWindow):
     def __init__(self):
-        super().__init__('resources/models/model.tflite', 'detection/estocada.mp4')
+        super().__init__('resources/models/model.tflite', 'detection/sentadilla.mp4')
         self.rep_count = 0
         self.initiated = False
     
