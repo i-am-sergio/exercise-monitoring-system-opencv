@@ -267,7 +267,7 @@ class ShowWindow:
             text = "Reposo"
             color = "red"
 
-        self.state_label.setText(f"Estado: {state}")
+        self.state_label.setText(f"Estado: {text}")
         self.state_label.setStyleSheet(f"color: {color}; font-size: 18px; font-weight: bold;")
 
         self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
