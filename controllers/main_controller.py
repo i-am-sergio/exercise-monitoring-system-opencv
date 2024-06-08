@@ -6,6 +6,7 @@ from controllers.estocada_controller import EstocadaController
 from controllers.biceps_controller import CurlBicepController
 from controllers.abdominal_controller import AbdominalController 
 from controllers.plancha_controller import PlanchaController
+from controllers.jumps_controller import JumpsController
 import os
 
 class MainController(QMainWindow):
@@ -23,7 +24,7 @@ class MainController(QMainWindow):
         self.ui.estocada_btn.clicked.connect(self.open_estocada_exercise)
         self.ui.abdominal_btn.clicked.connect(self.open_abdominal_exercise)
         self.ui.plancha_btn.clicked.connect(self.open_plancha_exercise)
-        self.ui.estocada_btn.clicked.connect(self.open_estocada_exercise)
+        self.ui.jumps_btn.clicked.connect(self.open_jumps_exercise)
 
     def set_button_styles(self):
         img_dir2 = "./resources/2_lunge_btn.png"
@@ -128,3 +129,7 @@ class MainController(QMainWindow):
     def open_plancha_exercise(self):
         self.plancha_window = PlanchaController()
         self.plancha_window.show()
+
+    def open_jumps_exercise(self):
+        self.jumps_window = JumpsController()
+        self.jumps_window.show()
