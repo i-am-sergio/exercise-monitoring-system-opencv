@@ -108,6 +108,8 @@ class ShowWindow:
         self.correct_state = False
         self.initiated = False
         self.video_path = video_path
+        self.response_final = 0
+        
 
     def exit_application(self):
             self.cap.release()
@@ -129,7 +131,8 @@ class ShowWindow:
         if not self.cap.isOpened():
             print("Error: No se pudo abrir el video.")
             return
-
+        self.fps = self.cap.get(cv2.CAP_PROP_FPS)
+        self.frame_duration = 1.0 / self.fps
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_window)
         self.timer.start(16)
@@ -162,81 +165,96 @@ class ShowWindow:
         return image
 
     def show_image(self, image):
-        # Obtener las dimensiones de la imagen y del contenedor
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image_height, image_width, _ = image_rgb.shape
         container_height, container_width = self.video_label.height(), self.video_label.width()
-
-        # Calcular la relación de aspecto de la imagen y del contenedor
         image_aspect_ratio = image_width / image_height
         container_aspect_ratio = container_width / container_height
-
-        # Ajustar la imagen al contenedor manteniendo la relación de aspecto
         if image_aspect_ratio > container_aspect_ratio:
-            # La imagen es más ancha que el contenedor, ajustar la altura
             new_height = container_height
             new_width = int(container_height * image_aspect_ratio)
         else:
-            # La imagen es más alta que el contenedor, ajustar la anchura
             new_width = container_width
             new_height = int(container_width / image_aspect_ratio)
-
-        # Redimensionar la imagen
         resized_image = cv2.resize(image_rgb, (new_width, new_height))
-
-        # Convertir la imagen redimensionada a QImage
         bytes_per_line = 3 * new_width
         q_image = QImage(resized_image.data, new_width, new_height, bytes_per_line, QImage.Format_RGB888)
-
-        # Convertir QImage a QPixmap y establecerlo en el QLabel
         pixmap = QPixmap.fromImage(q_image)
         self.video_label.setPixmap(pixmap)
         self.window.show()
 
+    def calculate_incorrect_duration(self):
+        incorrect_duration_frames = sum(1 for s in self.current_sequence if s == self.INCORRECT_STATE)
+        return incorrect_duration_frames * self.frame_duration
+    
+    def handle_rest_state(self):
+        if self.current_sequence:
+            incorrect_duration_seconds = self.calculate_incorrect_duration()
+            total_duration_seconds = len(self.current_sequence) * self.frame_duration
+
+            if incorrect_duration_seconds == 0 or incorrect_duration_seconds / total_duration_seconds <= 2:
+                self.correct_repetitions += 1
+                self.response_final = 1
+            else:
+                self.incorrect_repetitions += 1
+                self.response_final = 2
+
+            self.current_sequence = []
+            
+    def handle_incorrect_state(self):
+        incorrect_duration_seconds = self.calculate_incorrect_duration()
+        if incorrect_duration_seconds > 2:
+            self.incorrect_repetitions += 1
+            self.response_final = 2
+            self.current_sequence = []
+            
     def update_window(self):
         ret, frame = self.cap.read()
         if not ret:
             self.timer.stop()
             self.cap.release()
             return
+
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         keypoints_with_scores = self.get_keypoints(frame_rgb)
         keypoints = keypoints_with_scores[0][0]
         is_attempt = self.check_attempt(keypoints)
         is_correct = self.check_exercise(keypoints)
 
-
         if self.previous_state is None:
             self.previous_state = is_attempt
 
-        elif self.previous_state == is_attempt:
-            if is_correct:
-                self.correct_state = True
-        elif self.previous_state != is_attempt:
-            self.previous_state = is_attempt
-            if not is_attempt:
+        if self.previous_state != is_attempt:
+            if is_attempt:
+                # El usuario ha comenzado un nuevo intento
+                self.correct_state = False
+            else:
+                # El usuario ha terminado un intento
                 if self.correct_state:
                     self.correct_repetitions += 1
-                else :
+                else:
                     self.incorrect_repetitions += 1
-            self.correct_state = False
+            self.previous_state = is_attempt
+
+        elif is_attempt:
+            # Estamos en un intento, determinar si es correcto o no
+            if is_correct and not self.correct_state:
+                self.correct_state = True
 
         self.show_feedback(is_attempt)
 
         output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores)
         self.show_image(output_overlay)
+
     
     def show_image(self, image, new_height=500):
-        # Convertir la imagen a formato RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         height, width, _ = image_rgb.shape
         aspect_ratio = width / height
         new_width = int(new_height * aspect_ratio)
         resized_image_rgb = cv2.resize(image_rgb, (new_width, new_height))
         q_image = QImage(resized_image_rgb.data, new_width, new_height, 3 * new_width, QImage.Format_RGB888)
-
         pixmap = QPixmap.fromImage(q_image)
-
         self.video_label.setPixmap(pixmap)
         self.window.show()
 
@@ -255,7 +273,6 @@ class ShowWindow:
         self.feedback_label.setText(text)
         self.feedback_label.setStyleSheet(f"color: {color}; font-size: 18px; font-weight: bold;")
         self.feedback_label.show()
-
         self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
         self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
         #self.state_label.setText(f"Estado: {state}")

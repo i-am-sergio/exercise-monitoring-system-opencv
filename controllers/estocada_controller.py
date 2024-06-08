@@ -4,7 +4,7 @@ from detection.movenet_thunder import ShowWindow
 
 class EstocadaController(ShowWindow):
     def __init__(self):
-        super().__init__('resources/models/model.tflite', 'detection/flexion.mp4')
+        super().__init__('resources/models/model.tflite', 'detection/estocada.mp4')
         self.rep_count = 0
         self.initiated = False
     
@@ -21,41 +21,58 @@ class EstocadaController(ShowWindow):
             angle = 360 - angle
         return angle
     
-    def check_exercise(self, keypoints):
-        left_shoulder = keypoints[5][:2]
-        right_shoulder = keypoints[6][:2]
+    def check_attempt(self, keypoints):
+        # Coordenadas relevantes
         left_hip = keypoints[11][:2]
-        right_hip = keypoints[12][:2]
+        left_shoulder = keypoints[5][:2]
         left_knee = keypoints[13][:2]
-        right_knee = keypoints[14][:2]
         left_ankle = keypoints[15][:2]
+        right_hip = keypoints[12][:2]
+        right_knee = keypoints[14][:2]
         right_ankle = keypoints[16][:2]
 
-        # Calculate angles
-        left_knee_angle = self.calculate_angle(left_hip, left_knee, left_ankle)
-        right_knee_angle = self.calculate_angle(right_hip, right_knee, right_ankle)
-        left_hip_angle = self.calculate_angle(left_knee, left_hip, left_shoulder)
-        right_hip_angle = self.calculate_angle(right_knee, right_hip, right_shoulder)
+        # Altura de los hombros y los hombros
+        shoulder_height = (left_shoulder[1] + keypoints[6][1]) / 2  # Promedio de ambos hombros
+        hip_height = (left_hip[1] + right_hip[1]) / 2  # Promedio de ambas caderas
 
-        vertical_tolerance = 50
-        upright_check = lambda p1, p2: abs(p1[1] - p2[1]) > abs(p1[0] - p2[0]) - vertical_tolerance
+        # Ángulo de la pierna izquierda y derecha
+        knee_angle_left = self.calculate_angle(left_hip, left_knee, left_ankle)
+        knee_angle_right = self.calculate_angle(right_hip, right_knee, right_ankle)
 
-        # Correcto: Ha logrado el ángulo esperado
-        if (75 <= left_knee_angle <= 115) or (75 <= right_knee_angle <= 115):
-            return 3  # Correcto
+        # Posición del cuerpo y alineación
+        body_angle = self.calculate_angle(left_shoulder, left_hip, right_hip)
 
-        # Incorrecto: No ha logrado el ángulo esperado
-        if (60 <= left_knee_angle <= 120) or (60 <= right_knee_angle <= 120):
-            return 2  # Incorrecto
+        # Flexión del cuerpo para determinar intento
+        body_flexing = (shoulder_height - hip_height) < 150  # Valor ajustable según necesidades específicas
 
-        # Intento: Está en proceso de agacharse y doblar las piernas
-        if self.initiated and ((60 <= left_knee_angle <= 120) or (60 <= right_knee_angle <= 120)):
-            return 1  # Intento
+        # Verifica que el cuerpo empieza a inclinarse y que ambas piernas empiezan a flexionarse
+        return body_flexing and body_angle < 150 and knee_angle_left < 140 and knee_angle_right < 140
 
-        # Reposo: No está suficientemente erguido o está con las piernas rectas
-        if not (upright_check(left_shoulder, left_hip) and upright_check(right_shoulder, right_hip)) or \
-        (130 <= left_knee_angle <= 180 and 120 <= left_hip_angle <= 180) or \
-        (130 <= right_knee_angle <= 180 and 120 <= right_hip_angle <= 180):
-            return 0  # Reposo
+    def check_exercise(self, keypoints):
+        # Verificar la ejecución con la pierna izquierda adelante
+        left_hip = keypoints[11][:2]
+        left_knee = keypoints[13][:2]
+        left_ankle = keypoints[15][:2]
+        right_hip = keypoints[12][:2]
+        right_knee = keypoints[14][:2]
+        right_ankle = keypoints[16][:2]
 
-        return 2  # Por defecto, se considera Incorrecto
+        # Determinar el ángulo en la rodilla y la cadera de la pierna adelantada (izquierda o derecha)
+        front_leg_knee_angle_left = self.calculate_angle(left_hip, left_knee, left_ankle)
+        front_leg_knee_angle_right = self.calculate_angle(right_hip, right_knee, right_ankle)
+
+        # Determinar el ángulo en la rodilla de la pierna trasera (izquierda o derecha)
+        back_leg_angle_left = self.calculate_angle(right_knee, left_knee, left_ankle)
+        back_leg_angle_right = self.calculate_angle(left_knee, right_knee, right_ankle)
+
+        # Chequear desplazamiento horizontal entre las rodillas para confirmar que una pierna está claramente adelantada
+        horizontal_displacement = abs(left_knee[0] - right_knee[0])
+        
+        # Asegurar que la distancia horizontal es suficiente para considerar una pierna adelantada
+        sufficient_displacement = horizontal_displacement > 0.10  # Valor ajustable según la escala de los keypoints
+
+        # Aumentamos la tolerancia en los ángulos y aseguramos que las piernas no están paralelas
+        correct_position_left = (70 <= front_leg_knee_angle_left <= 120) and (back_leg_angle_right > 150)
+        correct_position_right = (70 <= front_leg_knee_angle_right <= 120) and (back_leg_angle_left > 150)
+
+        return (correct_position_left or correct_position_right) and sufficient_displacement
