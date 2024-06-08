@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import cv2
 
 # Import matplotlib libraries
 from matplotlib import pyplot as plt
