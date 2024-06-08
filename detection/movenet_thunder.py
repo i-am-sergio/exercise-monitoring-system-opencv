@@ -221,9 +221,6 @@ class ShowWindow:
         is_attempt = self.check_attempt(keypoints)
         is_correct = self.check_exercise(keypoints)
 
-        is_attempt = self.check_attempt(keypoints)
-        is_correct = self.check_exercise(keypoints)
-
 
         if self.previous_state is None:
             self.previous_state = is_attempt
@@ -239,21 +236,7 @@ class ShowWindow:
                 else :
                     self.incorrect_repetitions += 1
             self.correct_state = False
-            self.previous_state = is_attempt
 
-        elif self.previous_state == is_attempt:
-            if is_correct:
-                self.correct_state = True
-        elif self.previous_state != is_attempt:
-            self.previous_state = is_attempt
-            if not is_attempt:
-                if self.correct_state:
-                    self.correct_repetitions += 1
-                else :
-                    self.incorrect_repetitions += 1
-            self.correct_state = False
-
-        self.show_feedback(is_attempt)
         self.show_feedback(is_attempt)
 
         output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores)
@@ -277,19 +260,12 @@ class ShowWindow:
     def show_feedback(self,is_attempt):
         if is_attempt:
             text = "Intento"
-    def show_feedback(self,is_attempt):
-        if is_attempt:
-            text = "Intento"
             color = "green"
-            if self.correct_state:
-                text = "Correcto"
-                color = "blue"
             if self.correct_state:
                 text = "Correcto"
                 color = "blue"
         else:
             text = "Reposo"
-            color = "red"
             color = "red"
 
         self.state_label.setText(f"Estado: {text}")
@@ -297,7 +273,6 @@ class ShowWindow:
 
         self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
         self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
-        self.state_label.show()
         #self.state_label.setText(f"Estado: {state}")
         #self.state_label.show()
         self.correct_label.show()
@@ -323,4 +298,3 @@ if __name__ == '__main__':
     sw = ShowWindow()
     sw.show_window()
     sys.exit(app.exec_())
-
