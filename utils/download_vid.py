@@ -1,6 +1,8 @@
 from pytube import YouTube
 import moviepy.editor as mp
 
+# url video Estocada(lunge) = https://www.youtube.com/shorts/-GrQe7ho1P4 (Video Completo)
+
 # URL del video de YouTube
 url = 'https://www.youtube.com/watch?v=jKTxe236-4U'
 
