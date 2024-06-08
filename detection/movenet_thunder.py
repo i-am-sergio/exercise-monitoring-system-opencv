@@ -236,7 +236,7 @@ class ShowWindow:
                     self.incorrect_repetitions += 1
             self.correct_state = False
 
-            self.show_feedback(is_correct)
+        self.show_feedback(is_attempt)
 
         output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores)
         self.show_image(output_overlay)
@@ -255,23 +255,25 @@ class ShowWindow:
         self.video_label.setPixmap(pixmap)
         self.window.show()
 
-    def show_feedback(self, state):
-        if state == 3:
-            text = "Up"
+
+    def show_feedback(self,is_attempt):
+        if is_attempt:
+            text = "Intento"
             color = "green"
-        elif state == 2:
-            text = "Incorrecto"
-            color = "red"
+            if self.correct_state:
+                text = "Correcto"
+                color = "blue"
         else:
             text = "Reposo"
-            color = "black"
+            color = "red"
 
         self.state_label.setText(f"Estado: {state}")
         self.state_label.setStyleSheet(f"color: {color}; font-size: 18px; font-weight: bold;")
 
         self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
         self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
-        self.state_label.show()
+        #self.state_label.setText(f"Estado: {state}")
+        #self.state_label.show()
         self.correct_label.show()
         self.incorrect_label.show()
 
