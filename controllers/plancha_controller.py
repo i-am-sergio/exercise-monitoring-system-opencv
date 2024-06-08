@@ -37,7 +37,20 @@ class PlanchaController(ShowWindow):
         angle1 = self.calculate_angle(left_shoulder, left_elbow, left_wrist)
         
         # Si el ángulo entre el hombro, codo y muñeca es menor que un umbral dado, consideramos la flexión correcta
-        return angle1 < 90  # Puedes ajustar este umbral según sea necesario
+        is_correct = angle1 < 90  # Puedes ajustar este umbral según sea necesario
+        
+        # Ejemplo de indicaciones aleatorias
+        indications = [
+            {"name": "Indicación 1", "color": "blue"},
+            {"name": "Indicación 2", "color": "yellow"},
+            {"name": "Indicación 3", "color": "purple"}
+        ]
+        
+        # Llamamos a la función show_indications para mostrar las indicaciones
+        self.show_indications(indications)
+        
+        return is_correct
+
 
     def check_attempt(self, keypoints):
         # Definimos los índices de los puntos de referencia relevantes para la flexión (push-up)
