@@ -74,15 +74,16 @@ class ShowWindow:
         self.feedback_label = QLabel()
         self.correct_label = QLabel()
         self.incorrect_label = QLabel()
-        self.state_label = QLabel()
+        #self.state_label = QLabel()
         self.feedback_label.setText("Inicio")
         second_layout.addWidget(self.feedback_label)
         self.correct_label.setText("Correctos: 0")
         second_layout.addWidget(self.correct_label)
         self.incorrect_label.setText("Incorrectos: 0")
         second_layout.addWidget(self.incorrect_label)
-        second_layout.addWidget(self.state_label)
         second_layout.addWidget(exit_button)
+        #self.state_label.setText("Estado: 0")
+        #second_layout.addWidget(self.state_label)
 
         self.interpreter = tf.lite.Interpreter(model_path=model_path)
         self.interpreter.allocate_tensors()
@@ -104,13 +105,8 @@ class ShowWindow:
         self.correct_repetitions = 0
         self.incorrect_repetitions = 0
         self.previous_state = None
-        self.current_sequence = []
-        self.current_sequence_start_time = None
-        self.incorrect_start_time = None
-        self.REST_STATE = 0
-        self.CORRECT_STATE = 3
-        self.INCORRECT_STATE = 2
-        self.IN_PROGRESS_STATE = 1
+        self.correct_state = False
+        self.initiated = False
         self.video_path = video_path
         self.response_final = 0
         
@@ -222,22 +218,34 @@ class ShowWindow:
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         keypoints_with_scores = self.get_keypoints(frame_rgb)
         keypoints = keypoints_with_scores[0][0]
-        state = self.check_exercise(keypoints)
+        is_attempt = self.check_attempt(keypoints)
+        is_correct = self.check_exercise(keypoints)
 
         if self.previous_state is None:
-            self.previous_state = state
-        else:
-            if state == self.REST_STATE:
-                self.handle_rest_state()
-            elif state == self.INCORRECT_STATE:
-                self.handle_incorrect_state()
-                self.current_sequence.append(state)
+            self.previous_state = is_attempt
 
-            self.show_feedback(state)
-            self.previous_state = state
+        if self.previous_state != is_attempt:
+            if is_attempt:
+                # El usuario ha comenzado un nuevo intento
+                self.correct_state = False
+            else:
+                # El usuario ha terminado un intento
+                if self.correct_state:
+                    self.correct_repetitions += 1
+                else:
+                    self.incorrect_repetitions += 1
+            self.previous_state = is_attempt
+
+        elif is_attempt:
+            # Estamos en un intento, determinar si es correcto o no
+            if is_correct and not self.correct_state:
+                self.correct_state = True
+
+        self.show_feedback(is_attempt)
 
         output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores)
         self.show_image(output_overlay)
+
     
     def show_image(self, image, new_height=500):
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -251,23 +259,24 @@ class ShowWindow:
         self.window.show()
 
 
-    def show_feedback(self, state):
-        if self.response_final == 1:
-            text = "Correcto"
+    def show_feedback(self,is_attempt):
+        if is_attempt:
+            text = "Intento"
             color = "green"
-        elif self.response_final == 2:
-            text = "Incorrecto"
-            color = "red"
+            if self.correct_state:
+                text = "Correcto"
+                color = "blue"
         else:
             text = "Reposo"
-            color = "black"
+            color = "red"
+
         self.feedback_label.setText(text)
         self.feedback_label.setStyleSheet(f"color: {color}; font-size: 18px; font-weight: bold;")
         self.feedback_label.show()
         self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
         self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
-        self.state_label.setText(f"Estado: {state}")
-        self.state_label.show()
+        #self.state_label.setText(f"Estado: {state}")
+        #self.state_label.show()
         self.correct_label.show()
         self.incorrect_label.show()
 
