@@ -4,7 +4,7 @@ from detection.movenet_thunder import ShowWindow
 
 class EstocadaController(ShowWindow):
     def __init__(self):
-        super().__init__('resources/models/model.tflite', 'detection/estocada.mp4')
+        super().__init__('resources/models/model.tflite', 'detection/flexion.mp4')
         self.rep_count = 0
         self.initiated = False
     
@@ -30,38 +30,32 @@ class EstocadaController(ShowWindow):
         right_knee = keypoints[14][:2]
         left_ankle = keypoints[15][:2]
         right_ankle = keypoints[16][:2]
-        
+
         # Calculate angles
         left_knee_angle = self.calculate_angle(left_hip, left_knee, left_ankle)
         right_knee_angle = self.calculate_angle(right_hip, right_knee, right_ankle)
         left_hip_angle = self.calculate_angle(left_knee, left_hip, left_shoulder)
         right_hip_angle = self.calculate_angle(right_knee, right_hip, right_shoulder)
-        
-        # Tolerancia para la alineación vertical en vista diagonal
-        vertical_tolerance = 50  # Ajuste este valor según sea necesario para la diagonalidad
 
-        # Check if the body is upright considering a diagonal view
+        vertical_tolerance = 50
         upright_check = lambda p1, p2: abs(p1[1] - p2[1]) > abs(p1[0] - p2[0]) - vertical_tolerance
 
-        if not (upright_check(left_shoulder, left_hip) and upright_check(right_shoulder, right_hip)):
-            return False  # Not sufficiently upright
+        # Correcto: Ha logrado el ángulo esperado
+        if (75 <= left_knee_angle <= 115) or (75 <= right_knee_angle <= 115):
+            return 3  # Correcto
 
-        # Determine if a lunge is starting or in progress
-        if not self.initiated:
-            # Check if the lunge is starting with either leg
-            if (130 <= left_knee_angle <= 180 and 120 <= left_hip_angle <= 180) or \
-            (130 <= right_knee_angle <= 180 and 120 <= right_hip_angle <= 180):
-                self.initiated = True
-                return True  # Lunge started or in progress
-        else:
-            # Check if the lunge is still in progress with either leg
-            if (60 <= left_knee_angle <= 120) or (60 <= right_knee_angle <= 120):
-                return True  # Lunge in progress
-            
-            # Check if the lunge is complete with either leg
-            if (75 <= left_knee_angle <= 115) or (75 <= right_knee_angle <= 115):
-                self.initiated = False
-                self.rep_count += 1
-                return True  # Lunge complete
-        
-        return False
+        # Incorrecto: No ha logrado el ángulo esperado
+        if (60 <= left_knee_angle <= 120) or (60 <= right_knee_angle <= 120):
+            return 2  # Incorrecto
+
+        # Intento: Está en proceso de agacharse y doblar las piernas
+        if self.initiated and ((60 <= left_knee_angle <= 120) or (60 <= right_knee_angle <= 120)):
+            return 1  # Intento
+
+        # Reposo: No está suficientemente erguido o está con las piernas rectas
+        if not (upright_check(left_shoulder, left_hip) and upright_check(right_shoulder, right_hip)) or \
+        (130 <= left_knee_angle <= 180 and 120 <= left_hip_angle <= 180) or \
+        (130 <= right_knee_angle <= 180 and 120 <= right_hip_angle <= 180):
+            return 0  # Reposo
+
+        return 2  # Por defecto, se considera Incorrecto

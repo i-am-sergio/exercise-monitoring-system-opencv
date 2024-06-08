@@ -4,12 +4,10 @@ import moviepy.editor as mp
 # url video Estocada(lunge) = https://www.youtube.com/shorts/-GrQe7ho1P4 (Video Completo)
 
 # URL del video de YouTube
-url = 'https://www.youtube.com/watch?v=jKTxe236-4U'
+url = 'https://www.youtube.com/watch?v=5ZShK3AlGCk' # URL 2
 
-# Rango de tiempo en segundos (inicio, final)
-start_time = 58  # Minuto 0:58 (120 segundos)
-end_time = 68  # Minuto 1:08 (150 segundos)
-
+start_time = 120  # Minuto 0:58 (120 segundos)
+end_time = 155 # Minuto 1:08 (150 segundos)
 # Crea un objeto YouTube
 yt = YouTube(url)
 
