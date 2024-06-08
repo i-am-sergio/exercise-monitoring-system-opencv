@@ -35,7 +35,6 @@ COLOR_MAP = {
     'm': (255, 0, 255),  # Magenta
     'c': (0, 255, 255),  # Cyan
     'y': (255, 255, 0),  # Yellow
-    # Agrega más colores según sea necesario
 }
 class ShowWindow:
     def __init__(self, model_path, video_path):
@@ -83,6 +82,15 @@ class ShowWindow:
         self.previous_state = None
         self.video_path = video_path
 
+    def __del__(self):
+        try:
+            self.cap.release()
+        except AttributeError:
+            pass
+        try:
+            self.timer.stop()
+        except AttributeError:
+            pass
 
     def show(self):
         self.cap = cv2.VideoCapture(self.video_path)
@@ -99,7 +107,7 @@ class ShowWindow:
 
         img = frame.copy()
         img = tf.image.resize_with_pad(np.expand_dims(img, axis=0), input_size, input_size)
-        input_image = tf.cast(img, dtype=tf.float32)
+        input_image = tf.cast(img, dtype=tf.uint8)
 
         input_details = self.interpreter.get_input_details()
         output_details = self.interpreter.get_output_details()
@@ -200,7 +208,7 @@ class ShowWindow:
     
     def show_image(self, image):
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        height, width, channel = image_rgb.shape
+        height, width, _ = image_rgb.shape
         bytes_per_line = 3 * width
         q_image = QImage(image_rgb.data, width, height, bytes_per_line, QImage.Format_RGB888)
         pixmap = QPixmap.fromImage(q_image)

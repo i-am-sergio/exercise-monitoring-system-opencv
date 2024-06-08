@@ -2,6 +2,5 @@ build
 python
 *.exe
 venv/**
-*.tflite
 **_pycache_**
 **.mp4

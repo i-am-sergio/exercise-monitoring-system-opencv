@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow
-from views.main_window import Ui_MainWindow
+from views.main_window import UiMainWindow
 from controllers.sentadilla_controller import SentadillaController
 from controllers.estocada_controller import EstocadaController
 from controllers.biceps_controller import CurlBicepController
@@ -11,8 +11,8 @@ import os
 class MainController(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
+        self.ui = UiMainWindow()
+        self.ui.setup_ui(self)
         
         # Set stylesheets
         self.set_button_styles()
@@ -26,12 +26,6 @@ class MainController(QMainWindow):
         self.ui.estocada_btn.clicked.connect(self.open_estocada_exercise)
 
     def set_button_styles(self):
-        controller_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root_dir = os.path.abspath(os.path.join(controller_dir, ".."))
-        
-        # img_dir1 = os.path.join(project_root_dir, "resources/1_sentadilla_btn.png")
-        # img_dir2 = os.path.join(project_root_dir, "resources/2_lunge_btn.png")
-        # img_dir3 = os.path.join(project_root_dir, "resources/3_biceps_btn.png")
         img_dir2 = "./resources/2_lunge_btn.png"
         img_dir1 = "./resources/1_sentadilla_btn.png"
         img_dir3 = "./resources/3_biceps_btn.png"
