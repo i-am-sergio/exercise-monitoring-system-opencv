@@ -76,14 +76,17 @@ class ShowWindow:
         self.incorrect_label = QLabel()
         self.state_label = QLabel()
         self.feedback_label.setText("Inicio")
+        second_layout.addWidget(exit_button)
         second_layout.addWidget(self.feedback_label)
         self.correct_label.setText("Correctos: 0")
         second_layout.addWidget(self.correct_label)
         self.incorrect_label.setText("Incorrectos: 0")
         second_layout.addWidget(self.incorrect_label)
-        second_layout.addWidget(exit_button)
         self.state_label.setText("Estado: 0")
         second_layout.addWidget(self.state_label)
+
+        # Set stylesheets
+        self.set_label_styles()
 
         self.interpreter = tf.lite.Interpreter(model_path=model_path)
         self.interpreter.allocate_tensors()
@@ -107,6 +110,14 @@ class ShowWindow:
         self.previous_state = None
         self.initiated = False
         self.video_path = video_path
+
+    def set_label_styles(self):
+        FONT_SIZE = "font-size: 18px; font-weight: bold;"
+        self.feedback_label.setStyleSheet(f"color: #8ccefa; {FONT_SIZE}")
+        self.correct_label.setStyleSheet(f"color: #8ccefa; {FONT_SIZE}")
+        self.incorrect_label.setStyleSheet(f"color: #8ccefa; {FONT_SIZE}")
+        self.state_label.setStyleSheet(f"color: #8ccefa; {FONT_SIZE}")
+        
 
     def exit_application(self):
             self.cap.release()

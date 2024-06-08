@@ -21,5 +21,34 @@ class SentadillaController(ShowWindow):
             angle = 360 - angle
         return angle
     
+    # Check if the person is squatting
+    # Check if angle between hips, knees and ankles is correct
     def check_exercise(self, keypoints):
-        return False
+        # Extract relevant keypoints
+        left_hip = keypoints[11][:2]
+        right_hip = keypoints[12][:2]
+        left_knee = keypoints[13][:2]
+        right_knee = keypoints[14][:2]
+        left_ankle = keypoints[15][:2]
+        right_ankle = keypoints[16][:2]
+        
+        # Calculate angles
+        angle_left = self.calculate_angle(left_hip, left_knee, left_ankle)
+        angle_right = self.calculate_angle(right_hip, right_knee, right_ankle)
+        
+        # # Check if angles are within the correct range
+        # if angle_left < correct_threshold and angle_right < correct_threshold:
+        #     return 3  # Correct
+        # else:
+        #     return 2  # Incorrect
+        # I want check in range of 80 to 100,
+        if self.range_of_angle(angle_left) and self.range_of_angle(angle_right):
+            return 3 # Correct
+        else:
+            return 2 # Incorrect
+    
+    def range_of_angle(self, angle): # return true if angle is in range of 80 to 100 or false if not
+        if angle >= 70 and angle <= 110: # arround of 90
+            return True
+        else:
+            return False
