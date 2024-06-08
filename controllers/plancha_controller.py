@@ -9,7 +9,7 @@ import tensorflow as tf
 
 class PlanchaController(ShowWindow):
     def __init__(self):
-        super().__init__('resources/models/model.tflite', 'detection/flexion_fragment.mp4')
+        super().__init__('resources/models/model.tflite', 'detection/flexion.mp4')
         self.in_initial_position = False  # Nuevo estado para rastrear la posición inicial
         self.in_final_position = False  # Nuevo estado para rastrear la posición final
 

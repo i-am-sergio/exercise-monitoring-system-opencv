@@ -6,7 +6,7 @@ import numpy as np
 
 class CurlBicepController(ShowWindow):
     def __init__(self):
-        super().__init__('resources/models/model.tflite', 'detection/test.mp4')
+        super().__init__('resources/models/model.tflite', 'detection/bicep.mp4')
         self.rep_count = 0
     
     def __del__(self):
