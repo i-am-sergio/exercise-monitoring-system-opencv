@@ -6,9 +6,12 @@ import numpy as np
 
 class AbdominalController(ShowWindow):
     def __init__(self):
-        super().__init__('resources/models/model.tflite', 'detection/abdominal.mp4')
+        super().__init__('resources/models/model.tflite', 'detection/cortado1.mp4')
         self.rep_count = 0
         self.is_crunch_correct = False
+        self.angle_init=180
+        self.angle_end=40
+        self.angle_attempt=100
     
     def __del__(self):
         super().__del__()
@@ -30,6 +33,13 @@ class AbdominalController(ShowWindow):
         knee = keypoints[13][:2]
         
         crunch_angle = self.calculate_angle(knee, hip, shoulder)
-        
-        return crunch_angle < 60  # Reduced threshold angle for crunch detection
+        return crunch_angle < 30  # Reduced threshold angle for crunch detection
 
+    def check_attempt(self, keypoints):
+        # Left hip (11), left shoulder (5), and left knee (13)
+        hip = keypoints[11][:2]
+        shoulder = keypoints[5][:2]
+        knee = keypoints[13][:2]
+
+        crunch_angle = self.calculate_angle(knee, hip, shoulder)
+        return crunch_angle < self.angle_attempt
