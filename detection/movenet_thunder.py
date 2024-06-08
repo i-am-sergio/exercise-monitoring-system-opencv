@@ -272,6 +272,7 @@ class ShowWindow:
 
         self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
         self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
+        self.state_label.show()
         #self.state_label.setText(f"Estado: {state}")
         #self.state_label.show()
         self.correct_label.show()
