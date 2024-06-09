@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget, QGridLayout,  QPushButton
+from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget, QGridLayout,  QPushButton, QGroupBox
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import Qt, QTimer
 
@@ -60,20 +60,17 @@ KEYPOINT_DICT = {
 
 class ShowWindow:
     def __init__(self, model_path="resources/models/model.tflite", video_path=0):
-    
         self.window = QMainWindow()
-        self.window.setWindowTitle("Exercices Opencv + Qt")
+        self.window.setWindowTitle("Ejercicios Opencv + Qt")
         self.window.resize(1200, 700)
         central_widget = QWidget()
-        self.window.setCentralWidget(central_widget)  # Utiliza setCentralWidget en lugar de crear otro widget central
+        self.window.setCentralWidget(central_widget)  
 
-        # Layout de cuadrícula
         grid_layout = QGridLayout(central_widget)
-        grid_layout.setColumnStretch(0, 3)  # Columna 0 con tamaño 3
-        grid_layout.setColumnStretch(1, 1)  # Columna 1 con tamaño 1
-        grid_layout.setRowStretch(0, 1)  # Fila 0 con tamaño 1
+        grid_layout.setColumnStretch(0, 3)  
+        grid_layout.setColumnStretch(1, 1)  
+        grid_layout.setRowStretch(0, 1)  
 
-        # Contenedor 1
         self.main_widget = QWidget()
         self.layout = QVBoxLayout(self.main_widget)
         self.video_label = QLabel("Video Label")
@@ -82,31 +79,49 @@ class ShowWindow:
         self.main_widget.setStyleSheet('background-color: red')
         grid_layout.addWidget(self.main_widget, 0, 0, alignment=Qt.AlignCenter)
 
-
-        # Contenedor 2 con QVBoxLayout
         second_widget = QWidget()
-        second_layout = QVBoxLayout(second_widget)
-        grid_layout.addWidget(second_widget, 0, 1)
-
-
-        # Etiquetas en el segundo contenedor
+        self.second_layout = QVBoxLayout(second_widget)
 
         exit_button = QPushButton("Salir")
         exit_button.clicked.connect(self.exit_application)
-        self.feedback_label = QLabel()
-        self.correct_label = QLabel()
-        self.incorrect_label = QLabel()
-        self.state_label = QLabel()
-        self.feedback_label.setText("Inicio")
-        second_layout.addWidget(self.feedback_label)
-        self.correct_label.setText("Correctos: 0")
-        second_layout.addWidget(self.correct_label)
-        self.incorrect_label.setText("Incorrectos: 0")
-        second_layout.addWidget(self.incorrect_label)
-        second_layout.addWidget(exit_button)
-        self.state_label.setText("Estado: 0")
-        second_layout.addWidget(self.state_label)
 
+        # Grupo para los labels
+        labels_groupbox = QGroupBox("Contadores")
+        labels_groupbox.setStyleSheet("QGroupBox { font-size: 25px; }")
+        
+        labels_layout = QVBoxLayout(labels_groupbox)
+
+        # Crear los labels con estilos predefinidos
+        self.correct_label = QLabel()
+        self.correct_label.setStyleSheet("color: green; font-size: 20px; font-weight: bold;")
+        self.incorrect_label = QLabel()
+        self.incorrect_label.setStyleSheet("color: red; font-size: 20px; font-style: bold;")
+        self.state_label = QLabel()
+        self.state_label.setStyleSheet("color: black; font-size: 20px; font-style: bold;")
+
+        # Añade los labels al grupo
+
+        labels_layout.addWidget(self.state_label)
+        labels_layout.addWidget(self.correct_label)
+        labels_layout.addWidget(self.incorrect_label)
+
+        self.second_layout.addWidget(labels_groupbox)
+
+        # Crea un QGroupBox para las indicaciones
+        indications_groupbox = QGroupBox("Indicaciones")
+        indications_groupbox.setStyleSheet("QGroupBox { font-size: 25px; }")
+        self.indications_layout = QVBoxLayout(indications_groupbox)
+        self.indications_label = QLabel()  
+        self.indications_layout.addWidget(self.indications_label) 
+        self.second_layout.addWidget(indications_groupbox)
+
+        # Añade el botón "Salir" como último elemento del layout
+        self.second_layout.addWidget(exit_button)
+
+        # Añade el segundo contenedor al grid layout
+        grid_layout.addWidget(second_widget, 0, 1)
+
+        self.indications = []
         self.interpreter = tf.lite.Interpreter(model_path=model_path)
         self.interpreter.allocate_tensors()
         self.edges = [
@@ -127,17 +142,14 @@ class ShowWindow:
         self.correct_repetitions = 0
         self.incorrect_repetitions = 0
         self.previous_state = None
+        self.correct_state = False
+        self.correct_state = False
         self.initiated = False
         self.video_path = video_path
-
-        # Diccionario de ejercicios
-        self.exercise_keypoints = {
-            'bicep_curl': {
-                'keypoints': [5, 6, 7, 8, 9, 10],  # Shoulder, Elbow, Wrist for both arms
-                'edges': [(5, 7), (7, 9), (6, 8), (8, 10)]  # Edges for both arms
-            }
-            # Puedes añadir más ejercicios aquí
-        }
+        self.response_final = 0
+        
+        self.response_final = 0
+        
 
     def exit_application(self):
             self.cap.release()
@@ -159,7 +171,10 @@ class ShowWindow:
         if not self.cap.isOpened():
             print("Error: No se pudo abrir el video.")
             return
-
+        self.fps = self.cap.get(cv2.CAP_PROP_FPS)
+        self.frame_duration = 1.0 / self.fps
+        self.fps = self.cap.get(cv2.CAP_PROP_FPS)
+        self.frame_duration = 1.0 / self.fps
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_window)
         self.timer.start(16)
@@ -201,37 +216,75 @@ class ShowWindow:
         return image
 
     def show_image(self, image):
-        # Obtener las dimensiones de la imagen y del contenedor
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image_height, image_width, _ = image_rgb.shape
         container_height, container_width = self.video_label.height(), self.video_label.width()
-
-        # Calcular la relación de aspecto de la imagen y del contenedor
         image_aspect_ratio = image_width / image_height
         container_aspect_ratio = container_width / container_height
-
-        # Ajustar la imagen al contenedor manteniendo la relación de aspecto
         if image_aspect_ratio > container_aspect_ratio:
-            # La imagen es más ancha que el contenedor, ajustar la altura
             new_height = container_height
             new_width = int(container_height * image_aspect_ratio)
         else:
-            # La imagen es más alta que el contenedor, ajustar la anchura
             new_width = container_width
             new_height = int(container_width / image_aspect_ratio)
-
-        # Redimensionar la imagen
         resized_image = cv2.resize(image_rgb, (new_width, new_height))
-
-        # Convertir la imagen redimensionada a QImage
         bytes_per_line = 3 * new_width
         q_image = QImage(resized_image.data, new_width, new_height, bytes_per_line, QImage.Format_RGB888)
-
-        # Convertir QImage a QPixmap y establecerlo en el QLabel
         pixmap = QPixmap.fromImage(q_image)
         self.video_label.setPixmap(pixmap)
         self.window.show()
 
+    def calculate_incorrect_duration(self):
+        incorrect_duration_frames = sum(1 for s in self.current_sequence if s == self.INCORRECT_STATE)
+        return incorrect_duration_frames * self.frame_duration
+    
+    def handle_rest_state(self):
+        if self.current_sequence:
+            incorrect_duration_seconds = self.calculate_incorrect_duration()
+            total_duration_seconds = len(self.current_sequence) * self.frame_duration
+
+            if incorrect_duration_seconds == 0 or incorrect_duration_seconds / total_duration_seconds <= 2:
+                self.correct_repetitions += 1
+                self.response_final = 1
+            else:
+                self.incorrect_repetitions += 1
+                self.response_final = 2
+
+            self.current_sequence = []
+            
+    def handle_incorrect_state(self):
+        incorrect_duration_seconds = self.calculate_incorrect_duration()
+        if incorrect_duration_seconds > 2:
+            self.incorrect_repetitions += 1
+            self.response_final = 2
+            self.current_sequence = []
+            
+
+    def calculate_incorrect_duration(self):
+        incorrect_duration_frames = sum(1 for s in self.current_sequence if s == self.INCORRECT_STATE)
+        return incorrect_duration_frames * self.frame_duration
+    
+    def handle_rest_state(self):
+        if self.current_sequence:
+            incorrect_duration_seconds = self.calculate_incorrect_duration()
+            total_duration_seconds = len(self.current_sequence) * self.frame_duration
+
+            if incorrect_duration_seconds == 0 or incorrect_duration_seconds / total_duration_seconds <= 2:
+                self.correct_repetitions += 1
+                self.response_final = 1
+            else:
+                self.incorrect_repetitions += 1
+                self.response_final = 2
+
+            self.current_sequence = []
+            
+    def handle_incorrect_state(self):
+        incorrect_duration_seconds = self.calculate_incorrect_duration()
+        if incorrect_duration_seconds > 2:
+            self.incorrect_repetitions += 1
+            self.response_final = 2
+            self.current_sequence = []
+            
     def update_window(self):
         ret, frame = self.cap.read()
         if not ret:
@@ -239,77 +292,87 @@ class ShowWindow:
             self.cap.release()
             return
 
-        keypoints_with_scores = self.get_keypoints(frame)
+
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        keypoints_with_scores = self.get_keypoints(frame_rgb)
         keypoints = keypoints_with_scores[0][0]
+        is_attempt = self.check_attempt(keypoints)
         is_correct = self.check_exercise(keypoints)
 
         if self.previous_state is None:
-            self.previous_state = is_correct
-        elif self.previous_state != is_correct:
-            self.previous_state = is_correct
+            self.previous_state = is_attempt
 
-            if is_correct:
-                self.correct_repetitions += 1
+        if self.previous_state != is_attempt:
+            if is_attempt:
+                # El usuario ha comenzado un nuevo intento
+                self.correct_state = False
             else:
-                self.incorrect_repetitions += 1
+                # El usuario ha terminado un intento
+                if self.correct_state:
+                    self.correct_repetitions += 1
+                else:
+                    self.incorrect_repetitions += 1
+            self.previous_state = is_attempt
 
-            self.show_feedback(is_correct)
-        output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores, exercise='bicep_curl')
+        elif is_attempt:
+            # Estamos en un intento, determinar si es correcto o no
+            if is_correct and not self.correct_state:
+                self.correct_state = True
+
+        self.show_feedback(is_attempt)
+
+        output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores)
         self.show_image(output_overlay)
-        self.show_image(output_overlay)
+
     
     def show_image(self, image, new_height=500):
-        # Convertir la imagen a formato RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         height, width, _ = image_rgb.shape
         aspect_ratio = width / height
         new_width = int(new_height * aspect_ratio)
         resized_image_rgb = cv2.resize(image_rgb, (new_width, new_height))
         q_image = QImage(resized_image_rgb.data, new_width, new_height, 3 * new_width, QImage.Format_RGB888)
-
         pixmap = QPixmap.fromImage(q_image)
-
         self.video_label.setPixmap(pixmap)
         self.window.show()
 
 
-    def show_feedback(self, is_correct):
-        # if state == 3:
-        #     text = "Correcto"
-        #     color = "green"
-        # elif state == 2:
-        #     text = "Incorrecto"
-        #     color = "red"
-        # else:
-        #     text = "Reposo"
-        #     color = "black"
-
-        # self.feedback_label.setText(text)
-        # self.feedback_label.setStyleSheet(f"color: {color}; font-size: 18px; font-weight: bold;")
-        # self.feedback_label.show()
-
-        # self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
-        # self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
-        # self.state_label.setText(f"Estado: {state}")
-        # self.state_label.show()
-        # self.correct_label.show()
-        # self.incorrect_label.show()
-        if is_correct:
-            text = "Correcto"
+    def show_feedback(self,is_attempt):
+        if is_attempt:
+            text = "Intento"
             color = "green"
+            if self.correct_state:
+                text = "Correcto"
+                color = "blue"
         else:
-            text = "Incorrecto"
+            text = "Reposo"
             color = "red"
 
-        self.feedback_label.setText(text)
-        self.feedback_label.setStyleSheet(f"color: {color}; font-size: 18px; font-weight: bold;")
-        self.feedback_label.show()
+        self.state_label.setText(f"Estado: {text}")
+        self.state_label.setStyleSheet(f"color: {color}; font-size: 18px; font-weight: bold;")
 
         self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
         self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
+        #self.state_label.setText(f"Estado: {state}")
+        #self.state_label.show()
         self.correct_label.show()
         self.incorrect_label.show()
 
+
+    def show_indications(self, indications):
+        # Borra cualquier indicación previa
+        for indication in self.indications:
+            indication.hide()
+
+        self.indications = []
+
+        # Muestra las nuevas indicaciones
+        for obj in indications:
+            label = QLabel(obj["name"])
+            label.setStyleSheet(f"color: {obj['color']}; font-size: 20px; font-weight: bold; ")
+            self.indications_layout.addWidget(label)
+            self.indications.append(label)
+            label.show()
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     sw = ShowWindow()

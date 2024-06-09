@@ -79,10 +79,6 @@
 QPushButton:pressed {
     /*background-color: rgb(30,23,46);*/
     border-style: inset;
-}
-QPushButton:hover {
-	cursor: pointer;
-	/*background-color: #3F325C;*/
 }</string>
             </property>
             <property name="text">
@@ -120,9 +116,6 @@ QPushButton:hover {
 QPushButton:pressed {
     /*background-color: rgb(30,23,46);*/
     border-style: inset;
-}
-QPushButton:hover {
-	/*background-color: #3F325C;*/
 }</string>
             </property>
             <property name="text">
@@ -161,9 +154,7 @@ QPushButton:pressed {
     /*background-color: rgb(30,23,46);*/
     border-style: inset;
 }
-QPushButton:hover {
-	/*background-color: #3F325C;*/
-}</string>
+</string>
             </property>
             <property name="text">
              <string/>
@@ -171,7 +162,7 @@ QPushButton:hover {
            </widget>
           </item>
           <item row="3" column="0">
-           <widget class="QPushButton" name="elevaciones_btn">
+           <widget class="QPushButton" name="jumps_btn">
             <property name="minimumSize">
              <size>
               <width>350</width>
@@ -201,9 +192,7 @@ QPushButton:pressed {
     /*background-color: rgb(30,23,46);*/
     border-style: inset;
 }
-QPushButton:hover {
-	/*background-color: #3F325C;*/
-}</string>
+</string>
             </property>
             <property name="text">
              <string/>
@@ -240,9 +229,6 @@ QPushButton:hover {
 QPushButton:pressed {
     /*background-color: rgb(30,23,46);*/
     border-style: inset;
-}
-QPushButton:hover {
-	/*background-color: #3F325C;*/
 }</string>
             </property>
             <property name="text">
@@ -281,9 +267,7 @@ QPushButton:pressed {
     /*background-color: rgb(30,23,46);*/
     border-style: inset;
 }
-QPushButton:hover {
-	/*background-color: #3F325C;*/
-}</string>
+</string>
             </property>
             <property name="text">
              <string/>

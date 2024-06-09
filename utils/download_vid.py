@@ -2,25 +2,21 @@ from pytube import YouTube
 import moviepy.editor as mp
 import os
 
+TEMP_VIDEO = "video_completo.mp4"
+
 def recortar_video(url, start_time, end_time, output_path):
-    # Crea un objeto YouTube
     yt = YouTube(url)
-
-    # Descarga el video completo (temporal)
     video = yt.streams.get_highest_resolution()
-    video.download(filename="video_completo.mp4")
-
-    # Abre el video completo
-    video_clip = mp.VideoFileClip("video_completo.mp4")
-
-    # Selecciona el fragmento
+    video.download(filename=TEMP_VIDEO)
+    video_clip = mp.VideoFileClip(TEMP_VIDEO)
     fragmento = video_clip.subclip(start_time, end_time)
-
-    # Guarda el fragmento como un nuevo archivo
-    fragmento.write_videofile(output_path)
-
-    # Elimina el archivo temporal del video completo
-    os.remove("video_completo.mp4")
+    fragmento.write_videofile(output_path, codec='libx264')
+    fragmento.close()
+    video_clip.close()
+    try:
+        os.remove(TEMP_VIDEO)
+    except PermissionError as e:
+        print(f"No se pudo eliminar el archivo temporal: {e}")
 
 # Array con los enlaces de los videos y los tiempos de inicio y final
 videos = [
@@ -44,18 +40,27 @@ videos = [
     },
     {
         "url": "https://www.youtube.com/watch?v=5ZShK3AlGCk",
-        "start_time": 120,  # Minuto 5:40 (340 segundos)
-        "end_time": 155,    # Minuto 5:56 (356 segundos)
+        "start_time": 122,  # Minuto 2:02 (122 segundos)
+        "end_time": 155,    # Minuto 2:35 (155 segundos)
         "output_path": "detection/sentadilla.mp4"
     },
     {
         "url": "https://www.youtube.com/watch?v=CFBZ4jN1CMI&ab_channel=NationalAcademyofSportsMedicine(NASM)",
-        "start_time": 0,  # Minuto 5:40 (340 segundos)
-        "end_time": 18,    # Minuto 5:56 (356 segundos)
+        "start_time": 0,  # Minuto 0:00 (0 segundos)
+        "end_time": 18,    # Minuto 0:18 (18 segundos)
         "output_path": "detection/bicep.mp4"
+    },
+    {
+        "url": "https://www.youtube.com/watch?v=2J2g7XOr2i4",
+        "start_time": 115,  # Minuto 1:55 
+        "end_time": 138,    # Minuto 2:18
+        "output_path": "detection/jumping_jack.mp4"
     }
 ]
 
 # Recorre la lista de videos y recorta cada uno
-for video_info in videos:
-    recortar_video(video_info["url"], video_info["start_time"], video_info["end_time"], video_info["output_path"])
+# for video_info in videos:
+#     recortar_video(video_info["url"], video_info["start_time"], video_info["end_time"], video_info["output_path"])
+
+# only cut last video of the list
+recortar_video(videos[-3]["url"], videos[-3]["start_time"], videos[-3]["end_time"], videos[-3]["output_path"])
