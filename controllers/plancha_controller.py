@@ -109,7 +109,6 @@ class PlanchaController(ShowWindow):
         # Calcular los ángulos de las caderas, rodillas y tobillos
         angle_hip_left = self.calculate_angle(left_knee, left_hip, left_shoulder)
         angle_hip_right = self.calculate_angle(right_knee, right_hip, right_shoulder)
-        print(angle_hip_left)
         # Verificar si los ángulos están dentro del rango especificado
         return min_angle <= angle_hip_left <= max_angle and min_angle <= angle_hip_right <= max_angle
     
