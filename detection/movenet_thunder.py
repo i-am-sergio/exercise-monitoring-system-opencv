@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget, QGridLayout,  QPushButton, QGroupBox
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QImage, QPixmap, QFont
 from PyQt5.QtCore import Qt, QTimer
 
 import cv2
@@ -63,19 +63,37 @@ class ShowWindow:
         exit_button = QPushButton("Salir")
         exit_button.clicked.connect(self.exit_application)
 
+        font = QFont()
+        font.setFamily("URW Bookman [urw]")
+        font.setBold(True)
+        font.setItalic(False)
+        font.setWeight(75)
+
         # Grupo para los labels
         labels_groupbox = QGroupBox("Contadores")
-        labels_groupbox.setStyleSheet("QGroupBox { font-size: 25px; }")
+        labels_groupbox.setStyleSheet("QGroupBox { font-size: 30px; }")
+        labels_groupbox.setAlignment(Qt.AlignCenter)
+        labels_groupbox.setFont(font)
         
         labels_layout = QVBoxLayout(labels_groupbox)
 
         # Crear los labels con estilos predefinidos
         self.correct_label = QLabel()
-        self.correct_label.setStyleSheet("color: green; font-size: 20px; font-weight: bold;")
+        self.correct_label.setStyleSheet("color: #96d3fa; font-size: 18px; font-weight: bold;")
         self.incorrect_label = QLabel()
-        self.incorrect_label.setStyleSheet("color: red; font-size: 20px; font-style: bold;")
+        self.incorrect_label.setStyleSheet("color: #fa5b50; font-size: 18px; font-style: bold;")
         self.state_label = QLabel()
-        self.state_label.setStyleSheet("color: black; font-size: 20px; font-style: bold;")
+        self.state_label.setStyleSheet("color: #ebebeb; font-size: 18px; font-style: bold;")
+
+        font2 = QFont()
+        font2.setFamily("URW Bookman [urw]")
+        font2.setBold(True)
+        font2.setItalic(False)
+        font2.setWeight(35)
+
+        self.correct_label.setFont(font2)
+        self.incorrect_label.setFont(font2)
+        self.state_label.setFont(font2)
 
         # Añade los labels al grupo
 
@@ -87,7 +105,9 @@ class ShowWindow:
 
         # Crea un QGroupBox para las indicaciones
         indications_groupbox = QGroupBox("Indicaciones")
-        indications_groupbox.setStyleSheet("QGroupBox { font-size: 25px; }")
+        indications_groupbox.setStyleSheet("QGroupBox { font-size: 30px; }")
+        indications_groupbox.setAlignment(Qt.AlignCenter)
+        indications_groupbox.setFont(font)
         self.indications_layout = QVBoxLayout(indications_groupbox)
         self.indications_label = QLabel()  
         self.indications_layout.addWidget(self.indications_label) 
@@ -228,32 +248,6 @@ class ShowWindow:
             self.response_final = 2
             self.current_sequence = []
             
-
-    def calculate_incorrect_duration(self):
-        incorrect_duration_frames = sum(1 for s in self.current_sequence if s == self.INCORRECT_STATE)
-        return incorrect_duration_frames * self.frame_duration
-    
-    def handle_rest_state(self):
-        if self.current_sequence:
-            incorrect_duration_seconds = self.calculate_incorrect_duration()
-            total_duration_seconds = len(self.current_sequence) * self.frame_duration
-
-            if incorrect_duration_seconds == 0 or incorrect_duration_seconds / total_duration_seconds <= 2:
-                self.correct_repetitions += 1
-                self.response_final = 1
-            else:
-                self.incorrect_repetitions += 1
-                self.response_final = 2
-
-            self.current_sequence = []
-            
-    def handle_incorrect_state(self):
-        incorrect_duration_seconds = self.calculate_incorrect_duration()
-        if incorrect_duration_seconds > 2:
-            self.incorrect_repetitions += 1
-            self.response_final = 2
-            self.current_sequence = []
-            
     def update_window(self):
         ret, frame = self.cap.read()
         if not ret:
@@ -309,21 +303,20 @@ class ShowWindow:
     def show_feedback(self,is_attempt):
         if is_attempt:
             text = "Intento"
-            color = "green"
+            color = "#a7fa5a"
             if self.correct_state:
                 text = "Correcto"
-                color = "blue"
+                color = "#6eddff"
         else:
             text = "Reposo"
-            color = "red"
+            color = "#fca7d9"
 
         self.state_label.setText(f"Estado: {text}")
         self.state_label.setStyleSheet(f"color: {color}; font-size: 18px; font-weight: bold;")
 
         self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
         self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
-        #self.state_label.setText(f"Estado: {state}")
-        #self.state_label.show()
+
         self.correct_label.show()
         self.incorrect_label.show()
 
@@ -342,6 +335,7 @@ class ShowWindow:
             self.indications_layout.addWidget(label)
             self.indications.append(label)
             label.show()
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     sw = ShowWindow()

@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QMainWindow
 from views.main_window import UiMainWindow
 from controllers.sentadilla_controller import SentadillaController

@@ -6,17 +6,24 @@ TEMP_VIDEO = "video_completo.mp4"
 
 def recortar_video(url, start_time, end_time, output_path):
     yt = YouTube(url)
+
+    name = "video_completo.mp4"
+
+    # Descarga el video completo (temporal)
     video = yt.streams.get_highest_resolution()
-    video.download(filename=TEMP_VIDEO)
-    video_clip = mp.VideoFileClip(TEMP_VIDEO)
+    video.download(filename=name)
+
+    # Abre el video completo
+    video_clip = mp.VideoFileClip(name)
+
+    # Selecciona el fragmento
     fragmento = video_clip.subclip(start_time, end_time)
-    fragmento.write_videofile(output_path, codec='libx264')
-    fragmento.close()
-    video_clip.close()
-    try:
-        os.remove(TEMP_VIDEO)
-    except PermissionError as e:
-        print(f"No se pudo eliminar el archivo temporal: {e}")
+
+    # Guarda el fragmento como un nuevo archivo
+    fragmento.write_videofile(output_path)
+
+    # Elimina el archivo temporal del video completo
+    os.remove(name)
 
 # Array con los enlaces de los videos y los tiempos de inicio y final
 videos = [
@@ -40,7 +47,7 @@ videos = [
     },
     {
         "url": "https://www.youtube.com/watch?v=5ZShK3AlGCk",
-        "start_time": 122,  # Minuto 2:02 (122 segundos)
+        "start_time": 127.3,  # Minuto 2:04 (122 segundos)
         "end_time": 155,    # Minuto 2:35 (155 segundos)
         "output_path": "detection/sentadilla.mp4"
     },
@@ -63,4 +70,5 @@ videos = [
 #     recortar_video(video_info["url"], video_info["start_time"], video_info["end_time"], video_info["output_path"])
 
 # only cut last video of the list
-recortar_video(videos[-3]["url"], videos[-3]["start_time"], videos[-3]["end_time"], videos[-3]["output_path"])
+index = 3 # video 3
+recortar_video(videos[index]["url"], videos[index]["start_time"], videos[index]["end_time"], videos[index]["output_path"])
