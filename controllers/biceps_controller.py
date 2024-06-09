@@ -22,7 +22,7 @@ class CurlBicepController(ShowWindow):
             angle = 360 - angle
         return angle
     
-    def check_curl(self, keypoints):
+    def check_exercise(self, keypoints):
         elbow = keypoints[12][:2]
         wrist = keypoints[14][:2]
         shoulder = keypoints[11][:2]
