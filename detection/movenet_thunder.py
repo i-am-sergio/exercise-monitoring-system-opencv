@@ -36,28 +36,6 @@ COLOR_MAP = {
     'c': (0, 255, 255),  # Cyan
     'y': (255, 255, 0),  # Yellow
 }
-
-# Dictionary that maps from joint names to keypoint indices.
-KEYPOINT_DICT = {
-    'nose': 0,
-    'left_eye': 1,
-    'right_eye': 2,
-    'left_ear': 3,
-    'right_ear': 4,
-    'left_shoulder': 5,
-    'right_shoulder': 6,
-    'left_elbow': 7,
-    'right_elbow': 8,
-    'left_wrist': 9,
-    'right_wrist': 10,
-    'left_hip': 11,
-    'right_hip': 12,
-    'left_knee': 13,
-    'right_knee': 14,
-    'left_ankle': 15,
-    'right_ankle': 16
-}
-
 class ShowWindow:
     def __init__(self, model_path="resources/models/model.tflite", video_path=0):
         self.window = QMainWindow()
@@ -210,29 +188,20 @@ class ShowWindow:
         return keypoints_with_scores
     
 
-    def draw_predictions_on_image(self, image, keypoints_with_scores, keypoint_threshold=0.11, exercise=None):
+    def draw_predictions_on_image(self, image, keypoints_with_scores, keypoint_threshold=0.11):
         height, width, _ = image.shape
         keypoints = keypoints_with_scores[0, 0, :, :2]
         keypoints_scores = keypoints_with_scores[0, 0, :, 2]
 
-        if exercise and exercise in self.exercise_keypoints:
-            relevant_keypoints = self.exercise_keypoints[exercise]['keypoints']
-            relevant_edges = self.exercise_keypoints[exercise]['edges']
-        else:
-            relevant_keypoints = range(len(keypoints))
-            relevant_edges = self.edges
-
-        for idx, ((start, end), color) in enumerate(zip(relevant_edges, self.edge_colors)):
+        for idx, ((start, end), color) in enumerate(zip(self.edges, self.edge_colors)):
             if keypoints_scores[start] > keypoint_threshold and keypoints_scores[end] > keypoint_threshold:
                 start_point = (int(keypoints[start, 1] * width), int(keypoints[start, 0] * height))
                 end_point = (int(keypoints[end, 1] * width), int(keypoints[end, 0] * height))
                 cv2.line(image, start_point, end_point, color, 2)
-
-        for i in relevant_keypoints:
+        for i in range(keypoints.shape[0]):
             if keypoints_scores[i] > keypoint_threshold:
                 center = (int(keypoints[i, 1] * width), int(keypoints[i, 0] * height))
                 cv2.circle(image, center, 3, (0, 0, 255), -1)
-
         return image
 
     def show_image(self, image):
