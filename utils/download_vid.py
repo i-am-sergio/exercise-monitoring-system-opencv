@@ -22,8 +22,11 @@ def recortar_video(url, start_time, end_time, output_path):
     # Guarda el fragmento como un nuevo archivo
     fragmento.write_videofile(output_path)
 
-    # Elimina el archivo temporal del video completo
-    os.remove(name)
+    # Intenta eliminar el archivo temporal del video completo
+    try:
+        os.remove(name)
+    except PermissionError as e:
+        print(f"Error al eliminar el archivo temporal: {e}")
 
 # Array con los enlaces de los videos y los tiempos de inicio y final
 videos = [
@@ -66,9 +69,9 @@ videos = [
 ]
 
 # Recorre la lista de videos y recorta cada uno
-# for video_info in videos:
-#     recortar_video(video_info["url"], video_info["start_time"], video_info["end_time"], video_info["output_path"])
+for video_info in videos:
+    recortar_video(video_info["url"], video_info["start_time"], video_info["end_time"], video_info["output_path"])
 
 # only cut last video of the list
-index = 3 # video 3
-recortar_video(videos[index]["url"], videos[index]["start_time"], videos[index]["end_time"], videos[index]["output_path"])
+#index = 3 # video 3
+#recortar_video(videos[index]["url"], videos[index]["start_time"], videos[index]["end_time"], videos[index]["output_path"])
