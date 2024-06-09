@@ -4,13 +4,25 @@
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![OpenCV](https://img.shields.io/badge/opencv-%23white.svg?style=for-the-badge&logo=opencv&logoColor=white)
+![Qt](https://img.shields.io/badge/Qt-%23217346.svg?style=for-the-badge&logo=Qt&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white)
 ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
-<!-- ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white) -->
-<!-- ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white) -->
+![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
+![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 
 ## Description
 
 This project is an exercise monitoring system that uses OpenCV for video capture and processing, NumPy for data processing, and is implemented in both C++ and Python. The system captures video from a camera, processes the frames to monitor exercises, and displays the results in real-time.
+
+## Preview
+
+<p align="center">
+  <img src="resources/img/screen1.png" alt="Screen1" width="600px" />
+</p>
+
+<p align="center">
+  <img src="resources/img/screen2.png" alt="Screen2" width="600px" />
+</p>
 
 ## Requirements
 
@@ -30,33 +42,57 @@ This project is an exercise monitoring system that uses OpenCV for video capture
 4. **Project Structure:**
 ```
 exercise-monitoring-system/
-│
-├── main.py                 # Archivo principal para ejecutar la aplicación
-├── requirements.txt        # Dependencias del proyecto
-│
-├── resources/              # Archivos de recursos como imágenes, iconos, etc.
-│   ├── icons ...
-│   ├── images ...
-│   └── stylesheets ...
-│
-├── ui/                     # Interfaces de usuario
-│   ├── main_window.py      # Ventana principal de la aplicación
-│   ├── exercise_window.py  # Ventana de seguimiento de ejercicios
-│   └── __init__.py
-│
-├── core/                   # Funcionalidades principales de la aplicación
-│   ├── exercise.py         # Lógica relacionada con los ejercicios
-│   ├── routine.py          # Gestión de las rutinas de ejercicios
-│   └── __init__.py
-│
-├── detection/              # Módulos relacionados con la detección y seguimiento de poses
-│   ├── pose_estimation.py  # Lógica de estimación de poses utilizando OpenCV y el modelo MobileNet
-│   ├── camera.py           # Manejo de la cámara
-│   └── __init__.py
-│
-└── utils/                  # Utilidades y funciones auxiliares
-    ├── helpers.py          # Funciones de ayuda generales
-    └── __init__.py
+├── controllers
+│   ├── abdominal_controller.py
+│   ├── biceps_controller.py
+│   ├── elevaciones_controller.py
+│   ├── estocada_controller.py
+│   ├── jumps_controller.py
+│   ├── main_controller.py
+│   ├── plancha_controller.py
+│   ├── puente_controller.py
+│   └── sentadilla_controller.py
+|
+├── detection
+│   ├── abdominal.mp4
+│   ├── bicep.mp4
+│   ├── estocada.mp4
+│   ├── flexion.mp4
+│   ├── jumping_jack.mp4
+│   ├── movenet_thunder.py
+│   └── sentadilla.mp4
+|
+├── resources
+│   ├── 1_sentadilla_btn.png
+│   ├── 2_lunge_btn.png
+│   ├── 3_biceps_btn.png
+│   ├── 4_jumping_jacks_btn.png
+│   ├── 5_flexion_btn.png
+│   ├── 6_abdominal_btn.png
+│   ├── img
+│   │   ├── 1_sentadilla.png
+│   │   ├── 2_stocada.png
+│   │   ├── 3_biceps.png
+│   │   ├── 4_puente.png
+│   │   ├── 5_elevaciones.png
+│   │   └── 6_plancha.png
+│   └── models
+│       └── model.tflite
+|
+├── ui
+│   └── main_window.ui
+|
+├── utils
+│   └── download_vid.py
+|
+├── views
+|   └── main_window.py
+|
+├── main.py
+├── test.py
+├── README.md
+├── SETTINGS.md
+└── requirements.txt
 
 
 ```
@@ -64,6 +100,7 @@ exercise-monitoring-system/
 ### Tecnologies and tools
 - Python >= 3.10
 - OpenCV
+- Tensorflow
 - NumPy
 - MinGW (for C++ compilation)
 - GCC

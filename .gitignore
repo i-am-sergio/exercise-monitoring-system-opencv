@@ -6,3 +6,5 @@ venv
 venv/**
 **_pycache_**
 **.mp4
+tflite
+tflite/**
