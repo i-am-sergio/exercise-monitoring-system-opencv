@@ -18,7 +18,7 @@ add_library(tensorflowlite SHARED IMPORTED)
 set_property(TARGET tensorflowlite PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/../tflite-dist/libs/linux_x64/libtensorflowlite.so)
 
 # Crear el ejecutable
-add_executable(TFLiteMoveNet main.cpp)
+add_executable(TFLiteMoveNet movenet.cpp)
 
 # Especificar los directorios de búsqueda de bibliotecas
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../tflite-dist/libs/linux_x64)
