@@ -40,16 +40,20 @@ class PlanchaController(ShowWindow):
         is_correct_right = angle_right < self.exercise_angle_threshold
         
         # Ejemplo de indicaciones aleatorias con precisión
-        score_left = (1 - abs(self.exercise_angle_threshold - angle_left) / 40) * 100 
-        score_right = (1 - abs(self.exercise_angle_threshold - angle_right) / 40) * 100 
+        score_left = (1 - abs(self.exercise_angle_threshold - angle_left) / self.exercise_angle_threshold ) * 100 
+        score_right = (1 - abs(self.exercise_angle_threshold - angle_right) / self.exercise_angle_threshold ) * 100 
         
         # Calcular el promedio de precisión entre los lados
         score = np.mean([score_left, score_right])
         score_porcent = score if score >= 0 else 0
 
         # Determinar el color basado en la precisión
-        color = "blue" if score >= 80 else ("green" if 1 <= score <= 80 else "red")
-        
+        if score > 80:
+            color = "blue"
+        elif 1 <= score <= 80:
+            color = "green"
+        else:
+            color = "red"
         # Verificar si las rodillas, caderas y pies están alineados correctamente
         is_body_straight = self.check_body_alignment(keypoints, 120, 170)
         
@@ -126,14 +130,12 @@ class PlanchaController(ShowWindow):
     
     def check_legs_together(self, keypoints, angle_min, angle_max):
         # Definir los índices para los puntos de referencia de las caderas, rodillas y tobillos
-        hip_left = keypoints[11]
         hip_right = keypoints[12]
         knee_left = keypoints[13]
         knee_right = keypoints[14]
 
         # Calcular los ángulos entre las caderas y las rodillas
-        angle_hip_left_knee = self.calculate_angle(hip_left, knee_left, knee_right)
         angle_hip_right_knee = self.calculate_angle(hip_right, knee_right, knee_left)
         
         # Verificar si los ángulos están dentro del rango especificado
-        return  angle_min <= angle_hip_right_knee <= angle_max
+        return  angle_min <= angle_hip_right_knee <= angle_max 

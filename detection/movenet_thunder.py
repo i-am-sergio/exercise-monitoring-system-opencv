@@ -54,7 +54,6 @@ class ShowWindow:
         self.video_label = QLabel("Video Label")
         self.video_label.setAlignment(Qt.AlignCenter) 
         self.layout.addWidget(self.video_label)
-        self.main_widget.setStyleSheet('background-color: red')
         grid_layout.addWidget(self.main_widget, 0, 0, alignment=Qt.AlignCenter)
 
         second_widget = QWidget()
@@ -79,11 +78,10 @@ class ShowWindow:
 
         # Crear los labels con estilos predefinidos
         self.correct_label = QLabel()
-        self.correct_label.setStyleSheet("color: #96d3fa; font-size: 18px; font-weight: bold;")
+        self.correct_label.setStyleSheet("color: blue; font-size: 20px; font-weight: bold;")
         self.incorrect_label = QLabel()
-        self.incorrect_label.setStyleSheet("color: #fa5b50; font-size: 18px; font-style: bold;")
+        self.incorrect_label.setStyleSheet("color: red; font-size: 20px; font-weight: bold;")
         self.state_label = QLabel()
-        self.state_label.setStyleSheet("color: #ebebeb; font-size: 18px; font-style: bold;")
 
         font2 = QFont()
         font2.setFamily("URW Bookman [urw]")
@@ -106,10 +104,12 @@ class ShowWindow:
         # Crea un QGroupBox para las indicaciones
         indications_groupbox = QGroupBox("Indicaciones")
         indications_groupbox.setStyleSheet("QGroupBox { font-size: 30px; }")
-        indications_groupbox.setAlignment(Qt.AlignCenter)
         indications_groupbox.setFont(font)
         self.indications_layout = QVBoxLayout(indications_groupbox)
+        self.indications_layout.setAlignment(Qt.AlignCenter) 
         self.indications_label = QLabel()  
+        self.indications_label.setAlignment(Qt.AlignCenter)
+        self.indications_label.setFixedSize(200, 100) 
         self.indications_layout.addWidget(self.indications_label) 
         self.second_layout.addWidget(indications_groupbox)
 
@@ -303,16 +303,16 @@ class ShowWindow:
     def show_feedback(self,is_attempt):
         if is_attempt:
             text = "Intento"
-            color = "#a7fa5a"
+            color = "#D35400"
             if self.correct_state:
                 text = "Correcto"
-                color = "#6eddff"
+                color = "#2874A6"
         else:
             text = "Reposo"
-            color = "#fca7d9"
+            color = "black"
 
         self.state_label.setText(f"Estado: {text}")
-        self.state_label.setStyleSheet(f"color: {color}; font-size: 18px; font-weight: bold;")
+        self.state_label.setStyleSheet(f"color: {color}; font-size: 22px; font-weight: bold;")
 
         self.correct_label.setText(f"Correctas: {self.correct_repetitions}")
         self.incorrect_label.setText(f"Incorrectas: {self.incorrect_repetitions}")
