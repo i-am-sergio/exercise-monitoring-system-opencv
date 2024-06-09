@@ -228,32 +228,6 @@ class ShowWindow:
             self.response_final = 2
             self.current_sequence = []
             
-
-    def calculate_incorrect_duration(self):
-        incorrect_duration_frames = sum(1 for s in self.current_sequence if s == self.INCORRECT_STATE)
-        return incorrect_duration_frames * self.frame_duration
-    
-    def handle_rest_state(self):
-        if self.current_sequence:
-            incorrect_duration_seconds = self.calculate_incorrect_duration()
-            total_duration_seconds = len(self.current_sequence) * self.frame_duration
-
-            if incorrect_duration_seconds == 0 or incorrect_duration_seconds / total_duration_seconds <= 2:
-                self.correct_repetitions += 1
-                self.response_final = 1
-            else:
-                self.incorrect_repetitions += 1
-                self.response_final = 2
-
-            self.current_sequence = []
-            
-    def handle_incorrect_state(self):
-        incorrect_duration_seconds = self.calculate_incorrect_duration()
-        if incorrect_duration_seconds > 2:
-            self.incorrect_repetitions += 1
-            self.response_final = 2
-            self.current_sequence = []
-            
     def update_window(self):
         ret, frame = self.cap.read()
         if not ret:
