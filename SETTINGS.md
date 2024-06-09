@@ -25,6 +25,20 @@ python3 utils/download_vid.py # From root project
 python3 main.py # From root project
 ```
 
+- Alternative to run project:
+    ```bash
+    chmod u+x run.sh # the first time
+    ```
+-  _To run python project:_
+    ```bash
+    ./run.sh
+    ```
+- _To run the project and compile cpp before:_
+    ```bash
+    ./run.sh cpp
+    ```
+
+
 - **Extra: For Compile .ui file to .py:**
 ```bash
 pyuic5 file_window.ui -o file_window.py
