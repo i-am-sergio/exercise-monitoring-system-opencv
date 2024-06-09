@@ -47,7 +47,7 @@ videos = [
     },
     {
         "url": "https://www.youtube.com/watch?v=5ZShK3AlGCk",
-        "start_time": 124,  # Minuto 2:04 (122 segundos)
+        "start_time": 127,  # Minuto 2:04 (122 segundos)
         "end_time": 155,    # Minuto 2:35 (155 segundos)
         "output_path": "detection/sentadilla.mp4"
     },
