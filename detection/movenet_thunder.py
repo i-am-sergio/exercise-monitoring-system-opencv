@@ -126,6 +126,8 @@ class ShowWindow:
         self.video_path = video_path
         self.response_final = 0
         
+        self.response_final = 0
+        
 
     def exit_application(self):
             self.cap.release()
@@ -147,6 +149,8 @@ class ShowWindow:
         if not self.cap.isOpened():
             print("Error: No se pudo abrir el video.")
             return
+        self.fps = self.cap.get(cv2.CAP_PROP_FPS)
+        self.frame_duration = 1.0 / self.fps
         self.fps = self.cap.get(cv2.CAP_PROP_FPS)
         self.frame_duration = 1.0 / self.fps
         self.timer = QTimer()
@@ -224,6 +228,32 @@ class ShowWindow:
             self.response_final = 2
             self.current_sequence = []
             
+
+    def calculate_incorrect_duration(self):
+        incorrect_duration_frames = sum(1 for s in self.current_sequence if s == self.INCORRECT_STATE)
+        return incorrect_duration_frames * self.frame_duration
+    
+    def handle_rest_state(self):
+        if self.current_sequence:
+            incorrect_duration_seconds = self.calculate_incorrect_duration()
+            total_duration_seconds = len(self.current_sequence) * self.frame_duration
+
+            if incorrect_duration_seconds == 0 or incorrect_duration_seconds / total_duration_seconds <= 2:
+                self.correct_repetitions += 1
+                self.response_final = 1
+            else:
+                self.incorrect_repetitions += 1
+                self.response_final = 2
+
+            self.current_sequence = []
+            
+    def handle_incorrect_state(self):
+        incorrect_duration_seconds = self.calculate_incorrect_duration()
+        if incorrect_duration_seconds > 2:
+            self.incorrect_repetitions += 1
+            self.response_final = 2
+            self.current_sequence = []
+            
     def update_window(self):
         ret, frame = self.cap.read()
         if not ret:
@@ -231,32 +261,38 @@ class ShowWindow:
             self.cap.release()
             return
 
+
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         keypoints_with_scores = self.get_keypoints(frame_rgb)
         keypoints = keypoints_with_scores[0][0]
         is_attempt = self.check_attempt(keypoints)
         is_correct = self.check_exercise(keypoints)
 
-
         if self.previous_state is None:
             self.previous_state = is_attempt
 
-        elif self.previous_state == is_attempt:
-            if is_correct:
-                self.correct_state = True
-        elif self.previous_state != is_attempt:
-            self.previous_state = is_attempt
-            if not is_attempt:
+        if self.previous_state != is_attempt:
+            if is_attempt:
+                # El usuario ha comenzado un nuevo intento
+                self.correct_state = False
+            else:
+                # El usuario ha terminado un intento
                 if self.correct_state:
                     self.correct_repetitions += 1
-                else :
+                else:
                     self.incorrect_repetitions += 1
-            self.correct_state = False
+            self.previous_state = is_attempt
+
+        elif is_attempt:
+            # Estamos en un intento, determinar si es correcto o no
+            if is_correct and not self.correct_state:
+                self.correct_state = True
 
         self.show_feedback(is_attempt)
 
         output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores)
         self.show_image(output_overlay)
+
     
     def show_image(self, image, new_height=500):
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
