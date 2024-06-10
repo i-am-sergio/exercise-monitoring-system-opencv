@@ -36,10 +36,10 @@ This project is an exercise monitoring system that uses OpenCV for video capture
 
 5. **Modular Architecture:** The system's architecture should be modular, allowing for easy extension and customization of exercise detection algorithms and integration of additional features in the future.
 
-
 ## Structure
 
 4. **Project Structure:**
+
 ```
 exercise-monitoring-system/
 ├── controllers
@@ -98,6 +98,7 @@ exercise-monitoring-system/
 ```
 
 ### Tecnologies and tools
+
 - Python >= 3.10
 - OpenCV
 - Tensorflow
@@ -106,3 +107,18 @@ exercise-monitoring-system/
 - GCC
 - CMake
 - Ninja (optional, for generating build files with CMake)
+
+## Controllers:
+
+### Lunge Controller:
+
+Descripcion que consiste el ejercicio
+Captura
+
+- Funciones:
+
+  - Control de Piernas: Explicacion
+
+    Code
+
+    ...
