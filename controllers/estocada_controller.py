@@ -58,7 +58,7 @@ class EstocadaController(ShowWindow):
         back_leg_angle_left = self.calculate_angle(right_knee, left_knee, left_ankle)
         back_leg_angle_right = self.calculate_angle(left_knee, right_knee, right_ankle)
 
-        horizontal_displacement = abs(left_knee[0] - right_knee[0])
+        horizontal_displacement = abs(left_knee[1] - right_knee[1])
         sufficient_displacement = self.check_sufficient_displacement(horizontal_displacement)
 
         correct_front_leg_angle_left = self.check_front_leg_angle(front_leg_knee_angle_left)
@@ -84,7 +84,7 @@ class EstocadaController(ShowWindow):
         return (correct_position_left or correct_position_right) and sufficient_displacement
 
     def check_sufficient_displacement(self, displacement):
-        return displacement > 0.10
+        return displacement > 0.05
 
     def check_front_leg_angle(self, angle):
         return 70 <= angle <= 120
@@ -113,7 +113,7 @@ class EstocadaController(ShowWindow):
                         correct_back_leg_angle_right, correct_back_leg_angle_left):
         return [
             {"name": "Precisión: " + str(round(score_percent, 2)) + "%", "color": color},
-            {"name": "Piernas dobladas" if correct_position_left or correct_position_right else "Corrige piernas", "color": "green" if correct_position_left or correct_position_right else "red"},
-            {"name": "Pierna delantera" if correct_front_leg_angle_left or correct_front_leg_angle_right else "Corrige pierna delantera", "color": "green" if correct_front_leg_angle_left or correct_front_leg_angle_right else "red"},
-            {"name": "Pierna trasera" if correct_back_leg_angle_right or correct_back_leg_angle_left else "Corrige pierna trasera", "color": "green" if correct_back_leg_angle_right or correct_back_leg_angle_left else "red"}
+            {"name": "Piernas dobladas" if correct_position_left or correct_position_right else "Doble las piernas", "color": "green" if correct_position_left or correct_position_right else "red"},
+            {"name": "Pierna delantera" if correct_front_leg_angle_left or correct_front_leg_angle_right else "Doble pierna delantera", "color": "green" if correct_front_leg_angle_left or correct_front_leg_angle_right else "red"},
+            {"name": "Pierna trasera" if correct_back_leg_angle_right or correct_back_leg_angle_left else "Doble pierna trasera", "color": "green" if correct_back_leg_angle_right or correct_back_leg_angle_left else "red"}
         ]
