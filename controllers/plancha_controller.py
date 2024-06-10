@@ -61,7 +61,7 @@ class PlanchaController(ShowWindow):
         is_head_straight = self.check_head_alignment(keypoints, 0 , 90)
 
         # Verificar si las piernas están juntas
-        are_legs_together = self.check_legs_together(keypoints, 80, 180)
+        are_legs_together = self.check_legs_together(keypoints, 0.07)
         
         
         # Crear las indicaciones con el mensaje descriptivo
@@ -128,14 +128,14 @@ class PlanchaController(ShowWindow):
         # Verificar si el ángulo es menor que el umbral especificado
         return angle_head_shoulder_left >= min_angle and angle_head_shoulder_left <= max_angle
     
-    def check_legs_together(self, keypoints, angle_min, angle_max):
+    def check_legs_together(self, keypoints, max_distance):
         # Definir los índices para los puntos de referencia de las caderas, rodillas y tobillos
-        hip_right = keypoints[12]
-        knee_left = keypoints[13]
-        knee_right = keypoints[14]
+        left_ankle = keypoints[15]
+        right_ankle = keypoints[16]
 
-        # Calcular los ángulos entre las caderas y las rodillas
-        angle_hip_right_knee = self.calculate_angle(hip_right, knee_right, knee_left)
-        
+        left_knee = keypoints[13]
+        right_knee = keypoints[14]
+        separation_ankle = np.abs(left_ankle[0] - right_ankle[0])
+        separation_knee = np.abs(left_knee[0] - right_knee[0])
         # Verificar si los ángulos están dentro del rango especificado
-        return  angle_min <= angle_hip_right_knee <= angle_max 
+        return  separation_ankle < max_distance and separation_knee < max_distance
