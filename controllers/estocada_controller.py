@@ -7,9 +7,6 @@ class EstocadaController(ShowWindow):
         super().__init__('resources/models/model.tflite', 'detection/estocada.mp4')
         self.rep_count = 0
         self.initiated = False
-        self.tolerance_frames = 10
-        self.history_left = []
-        self.history_right = []
     
     def __del__(self):
         super().__del__()
@@ -120,15 +117,3 @@ class EstocadaController(ShowWindow):
             {"name": "Pierna delantera" if correct_front_leg_angle_left or correct_front_leg_angle_right else "Corrige pierna delantera", "color": "green" if correct_front_leg_angle_left or correct_front_leg_angle_right else "red"},
             {"name": "Pierna trasera" if correct_back_leg_angle_right or correct_back_leg_angle_left else "Corrige pierna trasera", "color": "green" if correct_back_leg_angle_right or correct_back_leg_angle_left else "red"}
         ]
-
-    def update_history(self, correct_position_left, correct_position_right):
-        self.history_left.append(correct_position_left)
-        self.history_right.append(correct_position_right)
-
-        if len(self.history_left) > self.tolerance_frames:
-            self.history_left.pop(0)
-        if len(self.history_right) > self.tolerance_frames:
-            self.history_right.pop(0)
-
-    def check_consistency(self, history):
-        return sum(history) > len(history) // 2
