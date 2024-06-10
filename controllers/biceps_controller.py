@@ -52,6 +52,16 @@ class CurlBicepController(ShowWindow):
         back_angle_right = self.calculate_angle(shoulder_right, hip_right, ankle_right)
 
         return back_angle_left, back_angle_right
+    
+    def check_body_aligment(self, keypoints):
+
+        shoulder_right = keypoints[6][0]
+        ankle_right = keypoints[16][0]
+
+        is_correct = np.abs(np.abs(shoulder_right) - np.abs(ankle_right))
+
+        print(is_correct)
+        return is_correct > 0.45
 
     def evaluate_angles(self, curl_angle_left, curl_angle_right, back_angle_left, back_angle_right):
         back_straight_left = 150 <= back_angle_left <= 180
@@ -95,8 +105,9 @@ class CurlBicepController(ShowWindow):
         is_correct, score_percent, back_straight_left, back_straight_right = self.evaluate_angles(curl_angle_left, curl_angle_right, back_angle_left, back_angle_right)
         indications = self.generate_indications(score_percent, back_straight_left, back_straight_right, curl_angle_left, curl_angle_right)
 
+        is_correct = is_correct and self.check_body_aligment(keypoints)
         self.show_indications(indications)
-        return is_correct
+        return is_correct 
 
     def check_attempt(self, keypoints):
 

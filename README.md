@@ -341,3 +341,120 @@ El Polichinela Controller es un sistema diseñado para analizar y evaluar la cor
           {"name": "Brazos estirados" if left_wrist_vertical_movement < wrist_vertical_threshold or right_wrist_vertical_movement < wrist_vertical_threshold else "Levante los brazos", "color": "green" if left_wrist_vertical_movement < wrist_vertical_threshold or right_wrist_vertical_movement < wrist_vertical_threshold else "red"}
       ]
   ```
+### **Curl Bicep Controller**
+
+El Controlador de Curl de Bíceps es un componente crucial en un sistema de asistencia para ejercicios físicos basado en visión por computadora. Este informe detalla su diseño, funcionamiento y los criterios utilizados para evaluar la postura del usuario durante el ejercicio.
+<p align="center">
+  <img src="docs/bicep/bicep_star.png" alt="Ejemplo Estocada" width="600px" />
+</p>
+#### Diseño del Controlador
+
+El Controlador de Curl de Bíceps se implementa en Python, utilizando el modelo TFLite para la detección de puntos clave (keypoints) del cuerpo humano. La detección de postura y la retroalimentación visual se llevan a cabo en tiempo real, permitiendo una corrección inmediata durante la ejecución del ejercicio.
+
+#### Funcionamiento
+
+El controlador sigue un proceso secuencial durante la ejecución del ejercicio:
+
+##### 1. Inicialización
+
+El controlador se inicializa con la ruta del modelo y el vídeo de detección.
+
+```python
+class CurlBicepController(ShowWindow):
+    def __init__(self):
+        super().__init__(model_path="resources/models/model.tflite", video_path="detection/flexion.mp4")
+        # Otros atributos y configuraciones
+```
+
+##### 2. Incio del ejercicio
+
+La función `check_temp` se encarga de verificar si el usuario está en la posición inicial del ejercicio de curl de bíceps. Comprueba si los keypoints detectados muestran una postura inicial válida.
+
+```python
+def check_temp(self, keypoints):
+    curl_angle_left, curl_angle_right = self.check_curl_angles(keypoints)
+
+        is_attempt_left = curl_angle_left <= self.attempt_angle_threshold
+        is_attempt_right = curl_angle_right <= self.attempt_angle_threshold
+
+        return is_attempt_left or is_attempt_right
+```
+
+##### 3. Criterios de Verificación
+
+La función `check_exercise` evalúa si el usuario está realizando correctamente el ejercicio de curl de bíceps. Para ello, verifica varios criterios, incluyendo:
+```python
+def check_exercise(self, keypoints):
+    # Verifica la ejecución correcta del ejercicio de curl de bíceps
+```
+###### 3.1 Alineación de la Espalda: 
+
+Otro aspecto crucial de la verificación implica evaluar los ángulos entre los keypoints de los hombros, caderas y tobillos. Esta evaluación permite determinar si la espalda del usuario se mantiene recta durante la ejecución del ejercicio. Se considera que la espalda está alineada de manera adecuada si los ángulos entre los keypoints de los hombros, caderas y tobillos están dentro de un rango establecido y aceptable. Esto es vital para prevenir lesiones y garantizar una postura correcta durante el ejercicio.
+```python
+...
+        back_straight_left = 150 <= back_angle_left <= 180
+        back_straight_right = 150 <= back_angle_right <= 180
+...
+```
+
+###### 3.2 Ángulos de Curl de Bíceps
+
+ En esta etapa, se calculan los ángulos entre los keypoints correspondientes a los hombros, codos y muñecas tanto izquierdo como derecho. Estos ángulos son fundamentales para determinar la adecuación del movimiento del brazo durante el ejercicio. Se considera que el ejercicio es ejecutado correctamente si los ángulos de curl de bíceps son menores o iguales al umbral establecido (exercise_angle_threshold). Esto garantiza una ejecución precisa y efectiva del ejercicio.
+
+   
+```python
+...
+      is_correct = (curl_angle_left <= self.exercise_angle_threshold and 
+      curl_angle_right <= self.exercise_angle_threshold and 
+      back_straight_left and back_straight_right)
+
+....
+```
+###### 3.3 Cálculo del Puntaje de Precisión
+
+Este código evalúa la precisión en la ejecución del ejercicio de curl de bíceps. Para cada brazo, los puntajes de precisión `score_left y score_right` se calculan restando el ángulo de curl medido del umbral establecido, dividiendo esta diferencia por el umbral y restando el resultado de 1. El puntaje final se determina promediando estos puntajes para ambos brazos `score`. Además, se garantiza que el puntaje final esté dentro del rango de 0 a 100 `score_percent`, lo que proporciona una evaluación clara de la técnica del usuario y facilita el monitoreo y la mejora de la ejecución del ejercicio.
+  ```python
+  score_left = (1 - abs(self.exercise_angle_threshold - curl_angle_left) / self.exercise_angle_threshold) * 100
+        score_right = (1 - abs(self.exercise_angle_threshold - curl_angle_right) / self.exercise_angle_threshold) * 100
+        score = np.mean([score_left, score_right])
+        score_percent = score if score >= 0 else 0
+  ```
+##### 4. Generación del FeedBack
+
+La función `generate_indications` se encarga de generar las indicaciones visuales basadas en los resultados de la evaluación del ejercicio. Las indicaciones incluyen información sobre la precisión del movimiento, la alineación de la espalda y la ejecución correcta de los curls de bíceps.
+
+```python
+indications = [
+            {"name": "Precision: " + str(round(score_percent, 2)) + "%", "color": self.determine_color(score_percent)},
+            {"name": "Espalda recta" if back_straight_left and back_straight_right else "Corrige espalda", "color": "green" if back_straight_left and back_straight_right else "red"},
+            {"name": "Curl brazo izquierdo" if curl_angle_left <= self.exercise_angle_threshold else "Corrige brazo izquierdo", "color": "green" if curl_angle_left <= self.exercise_angle_threshold else "red"},
+            {"name": "Curl brazo derecho" if curl_angle_right <= self.exercise_angle_threshold else "Corrige brazo derecho", "color": "green" if curl_angle_right <= self.exercise_angle_threshold else "red"}
+        ]
+        return indications
+```
+Determinar Color
+
+  Esta función determina el color asociado a la puntuación calculada para proporcionar una retroalimentación visual clara.
+
+  ```python
+  def determine_color(self, score_percent):
+      if score_percent > 80:
+          return "blue"
+      elif 1 <= score_percent <= 80:
+          return "green"
+      else:
+          return "red"
+  ```
+
+Estas funciones del Controlador de Curl de Bíceps trabajan en conjunto para proporcionar una evaluación detallada de la postura y la ejecución del ejercicio. La función `check_exercise` utiliza criterios específicos para verificar la correcta realización del curl de bíceps, mientras que `generate_indications` se encarga de proporcionar retroalimentación visual al usuario.
+
+#### Resultado
+##### Correcto
+<p align="center">
+  <img src="docs/bicep/bicep_correct.png" alt="Ejemplo Estocada" width="600px" />
+</p>
+
+##### Incorrecto
+<p align="center">
+  <img src="docs/bicep/bicep_incorrect.png" alt="Ejemplo Estocada" width="600px" />
+</p>
