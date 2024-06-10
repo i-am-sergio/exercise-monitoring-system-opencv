@@ -28,35 +28,35 @@ class SentadillaController(ShowWindow):
     # Check if the person is squatting
     # Check if angle between hips, knees and ankles is correct
     def check_exercise(self, keypoints):
-        # Extract relevant keypoints
+
+        left_shoulder = keypoints[5][:2]
+        right_shoulder = keypoints[6][:2]
         left_hip = keypoints[11][:2]
         right_hip = keypoints[12][:2]
         left_knee = keypoints[13][:2]
         right_knee = keypoints[14][:2]
-        left_ankle = keypoints[15][:2]
-        right_ankle = keypoints[16][:2]
-        left_shoulder = keypoints[5][:2]
-        right_shoulder = keypoints[6][:2]
 
-        # Calculate distances
-        distance_left = self.calculate_distance(left_shoulder, left_knee)
-        distance_right = self.calculate_distance(right_shoulder, right_knee)
-        
-        # Calculate angles
-        angle_left = self.calculate_angle(left_hip, left_knee, left_ankle)
-        angle_right = self.calculate_angle(right_hip, right_knee, right_ankle)
-        
-        # if distances < 0.3 is attempting
-        # if distance_left < 0.3 and distance_right < 0.3:
-        #     return angle_left < 95 and angle_right < 95
-        # else:
-        #     return False
         correct_depth_squat = self.check_depth_squat(keypoints)
+        correct_hip_angle = self.check_hip_angle(keypoints)
+        correct_knee_angle = self.check_knee_angle(keypoints)
 
-        return correct_depth_squat
-    
+        # Ángulo de la cadera
+        hip_angle_left = self.calculate_angle(left_shoulder, left_hip, left_knee)
+        hip_angle_right = self.calculate_angle(right_shoulder, right_hip, right_knee)
+
+        score_left = self.calculate_score(hip_angle_left)
+        score_right = self.calculate_score(hip_angle_right)
+
+        score_percent, color = self.calculate_score_and_color(score_left, score_right)
+
+
+        indications = self.create_indications(score_percent, color, correct_hip_angle, correct_knee_angle)
+        
+        self.show_indications(indications)
+
+        return correct_depth_squat and correct_hip_angle and correct_knee_angle
+
     # Check if the person is attempting to squat
-    # Check if the angle between hips, knees and ankles is correct
     def check_attempt(self, keypoints):
         # Extract relevant keypoints
         left_hip = keypoints[11][:2]
@@ -68,7 +68,6 @@ class SentadillaController(ShowWindow):
         left_shoulder = keypoints[5][:2]
         right_shoulder = keypoints[6][:2]
         
-        # Calculate angles
         angle_left = self.calculate_angle(left_hip, left_knee, left_ankle)
         angle_right = self.calculate_angle(right_hip, right_knee, right_ankle)
 
@@ -81,8 +80,8 @@ class SentadillaController(ShowWindow):
             return angle_left < self.angle_knee_attempt and angle_right < self.angle_knee_attempt
         else:
             return False
-        
-    
+
+
     # la cadera debe descender hasta alcanzar al menos la altura de las rodillas,
     def check_depth_squat(self, keypoints):
         left_hip = keypoints[11][:2]
@@ -95,4 +94,59 @@ class SentadillaController(ShowWindow):
         right_y_diff = abs(right_hip[1] - right_knee[1])
 
         return left_y_diff < 0.1 and right_y_diff < 0.1
+    
+    # Verifica que el ángulo de la cadera sea menor a 90 grados
+    def check_hip_angle(self, keypoints):
+        left_shoulder = keypoints[5][:2]
+        right_shoulder = keypoints[6][:2]
+        left_hip = keypoints[11][:2]
+        right_hip = keypoints[12][:2]
+        left_knee = keypoints[13][:2]
+        right_knee = keypoints[14][:2]
+
+        # Ángulo de la cadera
+        hip_angle_left = self.calculate_angle(left_shoulder, left_hip, left_knee)
+        hip_angle_right = self.calculate_angle(right_shoulder, right_hip, right_knee)
+
+        return hip_angle_left < 90 and hip_angle_right < 90
+    
+    # Verifica el angulo de la rodilla
+    def check_knee_angle(self, keypoints):
+        left_hip = keypoints[11][:2]
+        right_hip = keypoints[12][:2]
+        left_knee = keypoints[13][:2]
+        right_knee = keypoints[14][:2]
+        left_ankle = keypoints[15][:2]
+        right_ankle = keypoints[16][:2]
+
+        # Ángulo de la rodilla
+        knee_angle_left = self.calculate_angle(left_hip, left_knee, left_ankle)
+        knee_angle_right = self.calculate_angle(right_hip, right_knee, right_ankle)
+
+        # print("Knee Left: ", knee_angle_left, "  -  Knee Right: ", knee_angle_right)
+
+        return knee_angle_left < 100 and knee_angle_right < 100
+    
+    def calculate_score(self, angle):
+        return (1 - abs(90 - angle) / 90) * 100
+    
+    def calculate_score_and_color(self, score_left, score_right):
+        score = np.mean([score_left, score_right])
+        score_percent = score if score >= 0 else 0
+        
+        if score >= 80:
+            color = "blue"
+        elif 1 <= score < 80:
+            color = "green"
+        else:
+            color = "red"
+        
+        return score_percent, color
+
+    def create_indications(self, score_percent, color, correct_hip_angle, correct_knee_angle):
+        return [
+            {"name": "Precision: " + str(round(score_percent, 2)) + "%", "color": color },
+            {"name": "Cadera correcta" if correct_hip_angle else "Corrige Cadera", "color": "green" if correct_hip_angle else "red"},
+            {"name": "Rodilla correcta" if correct_knee_angle else "Agachate Mas", "color": "green" if correct_knee_angle else "red"}
+        ]
         
