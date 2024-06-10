@@ -67,9 +67,9 @@ class PlanchaController(ShowWindow):
         # Crear las indicaciones con el mensaje descriptivo
         indications = [
             {"name": "Precision: " + str(round(score_porcent, 2)) + "%", "color": color},
-            {"name": "Cabeza recta" if is_head_straight else "Cabeza inclinada", "color": "green" if is_head_straight else "orange"},
-            {"name": "Cuerpo recto" if is_body_straight else "Cuerpo inclinado", "color": "green" if is_body_straight else "red"},
-            {"name": "Piernas juntas" if are_legs_together else "Piernas separadas", "color": "green" if are_legs_together else "orange"}
+            {"name": "Cabeza recta" if is_head_straight else "Enderece la cabeza", "color": "green" if is_head_straight else "red"},
+            {"name": "Cuerpo recto" if is_body_straight else "Enderece el cuerpo", "color": "green" if is_body_straight else "red"},
+            {"name": "Piernas juntas" if are_legs_together else "Junte las piernas", "color": "green" if are_legs_together else "red"}
         ]
         
         # Llamamos a la función show_indications para mostrar las indicaciones
