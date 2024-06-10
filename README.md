@@ -835,3 +835,164 @@ Estas funciones del Controlador de Curl de Bíceps trabajan en conjunto para pro
 <p align="center">
   <img src="docs/bicep/bicep_incorrect.png" alt="Ejemplo Estocada" width="600px" />
 </p>
+
+
+### Plancha Controller:
+
+**Descripción:**
+
+La Plancha Controller es un sistema diseñado para analizar y evaluar la correcta ejecución de las flexiones de brazos (push-ups), un ejercicio popular para fortalecer el tren superior. Utiliza un modelo de detección de poses basado en TensorFlow Lite y una cámara para capturar los movimientos del usuario, asegurando que las flexiones se realicen con la técnica adecuada para maximizar los beneficios y minimizar el riesgo de lesiones.
+
+<p align="center">
+  <img src="docs/plancha/example.png" alt="Ejemplo Plancha" width="600px" />
+</p>
+
+#### Funciones:
+
+- **Calcular Distancia:**
+
+  Esta función calcula la distancia euclidiana entre dos puntos, que en este contexto son las coordenadas de los puntos clave del cuerpo.
+
+  ```python
+  def calculate_distance(self, point1, point2):
+      return np.linalg.norm(np.array(point1) - np.array(point2))
+  ```
+
+- **Verificar Ejercicio Completo:**
+
+  Esta función verifica si la ejecución de las flexiones es correcta evaluando los ángulos entre hombro, codo y muñeca, además de agregar verificaciones adicionales para garantizar la integridad del ejercicio.
+  ```python
+  def check_exercise(self, keypoints):
+        
+        # Definimos los índices de los puntos de referencia relevantes para la flexión (push-up)
+        left_shoulder = keypoints[5]  # Índice 5 para el hombro izquierdo
+        left_elbow = keypoints[7]     # Índice 7 para el codo izquierdo
+        left_wrist = keypoints[9]     # Índice 9 para la muñeca izquierda
+        
+        right_shoulder = keypoints[6]  # Índice 6 para el hombro derecho
+        right_elbow = keypoints[8]     # Índice 8 para el codo derecho
+        right_wrist = keypoints[10]    # Índice 10 para la muñeca derecha
+        
+        # Calculamos los ángulos relevantes para verificar la flexión en ambos lados
+        angle_left = self.calculate_angle(left_shoulder, left_elbow, left_wrist)
+        angle_right = self.calculate_angle(right_shoulder, right_elbow, right_wrist)
+        
+        # Verificamos si el ángulo en ambos lados es menor que el umbral dado
+        is_correct_left = angle_left < self.exercise_angle_threshold
+        is_correct_right = angle_right < self.exercise_angle_threshold
+        
+        # Calcular el score para ambos lados
+        score_left = self.calculate_score(angle_left, self.exercise_angle_threshold)
+        score_right = self.calculate_score(angle_right, self.exercise_angle_threshold)
+        
+        # Calcular el promedio de precisión entre los lados
+        score = np.mean([score_left, score_right])
+        score_porcent = score if score >= 0 else 0
+
+        # Determinar el color basado en la precisión
+        if score > 80:
+            color = "blue"
+        elif 1 <= score <= 80:
+            color = "green"
+        else:
+            color = "red"
+        # Verificar si las rodillas, caderas y pies están alineados correctamente
+        is_body_straight = self.check_body_alignment(keypoints, 120, 170)
+        
+        # Verificar si la cabeza está alineada con los hombros
+        is_legs_straight = self.check_legs_alignment(keypoints, 130, 190)
+
+        # Verificar si las piernas están juntas
+        are_legs_together = self.check_legs_together(keypoints, 0.07)
+        
+        # Crear las indicaciones con el mensaje descriptivo
+        indications = [
+            {"name": "Precision: " + str(round(score_porcent, 2)) + "%", "color": color},
+            {"name": "Piernas rectas" if is_legs_straight else "Enderece las piernas", "color": "green" if is_legs_straight else "red"},
+            {"name": "Cuerpo recto" if is_body_straight else "Enderece el cuerpo", "color": "green" if is_body_straight else "red"},
+            {"name": "Piernas juntas" if are_legs_together else "Junte las piernas", "color": "green" if are_legs_together else "red"}
+        ]
+        
+        # Llamamos a la función show_indications para mostrar las indicaciones
+        self.show_indications(indications)
+        
+        # Devolvemos True si el ejercicio se realiza correctamente en ambos lados
+        return is_correct_left and is_correct_right
+  ```
+
+- **Verificar Ejercicio Correcto:**
+
+  Esta función verifica si los angulos entre los hombros, codos y muñecas coinciden con el humbral dado. 
+
+  ```python
+  def check_attempt(self, keypoints):
+    # Definimos los índices de los puntos de referencia relevantes para la flexión (push-up)
+    left_shoulder = keypoints[5]  # Índice 5 para el hombro izquierdo
+    left_elbow = keypoints[7]     # Índice 7 para el codo izquierdo
+    left_wrist = keypoints[9]     # Índice 9 para la muñeca izquierda
+
+    right_shoulder = keypoints[6]  # Índice 6 para el hombro derecho
+    right_elbow = keypoints[8]     # Índice 8 para el codo derecho
+    right_wrist = keypoints[10]    # Índice 10 para la muñeca derecha
+
+    # Calculamos los ángulos relevantes para verificar la flexión en ambos lados
+    angle_left = self.calculate_angle(left_shoulder, left_elbow, left_wrist)
+    angle_right = self.calculate_angle(right_shoulder, right_elbow, right_wrist)
+
+    # Verificamos si el ángulo en ambos lados es menor que el umbral dado
+    is_attempt_left = angle_left < self.attempt_angle_threshold
+    is_attempt_right = angle_right < self.attempt_angle_threshold
+
+    # Devolvemos True si el intento es válido en al menos un lado
+    return is_attempt_left and is_attempt_right
+  ```
+
+- **Calcular Puntuación:**
+
+  Esta función se basa en la diferencia que hay entre el angulo actual con respecto al angulo esperado, si el angulo actual es el mismo al del angulo esperado seria un puntaje de 100%
+
+  ```python
+  def calculate_score(self, angle, threshold):
+    return (1 - abs(threshold - angle) / threshold ) * 100 
+  ```
+
+- **Crear Indicaciones:**
+
+  Esta función crea una lista de indicaciones basadas en la precisión y las diferentes posturas importantes para realizar una plancha correctamente
+
+  ```python
+    is_body_straight = self.check_body_alignment(keypoints, 120, 170)
+        
+    # Verificar si la cabeza está alineada con los hombros
+    is_head_straight = self.check_head_alignment(keypoints, 0 , 9) 
+    # Verificar si las piernas están juntas
+    are_legs_together = self.check_legs_together(keypoints, 0.07)
+
+    # Crear las indicaciones con el mensaje descriptivo
+    indications = [
+        {"name": "Precision: " + str(round(score_porcent, 2)) + "%", "color": color},
+        {"name": "Cabeza recta" if is_head_straight else "Enderece la cabeza", "color": "green" if is_head_straight else "red"},
+        {"name": "Cuerpo recto" if is_body_straight else "Enderece el cuerpo", "color": "green" if is_body_straight else "red"},
+        {"name": "Piernas juntas" if are_legs_together else "Junte las piernas", "color": "green" if are_legs_together else "red"}
+    ]
+  ```
+#### Analisís de diferentes casos al realizar la plancha
+
+- **Postura de inicio:**
+Esta es la posicion inicial que debe tener la persona para iniciar la plancha, la presición es cero ya que aun no esta realizando la flexión.
+
+<p align="center">
+  <img src="docs/plancha/postura_correcta.png" alt="Postura correcta" width="600px" />
+</p>
+
+- **Cuerpo chueco**:
+Puede ocurrir en varias ocaciones, como al tener el cuerpo inclinado (debe estar recto desde tobillos hasta hombros)
+<p align="center">
+  <img src="docs/plancha/cuerpo_chueco.png" alt="Cuerpo inclinado" width="600px" />
+</p>
+
+- **Piernas separadas**:
+En una plancha la fuerza se debe realizar en el tren superior del cuerpo, por lo que tener las piernas separadas seria incorrecto al realizar el ejercicio.
+<p align="center">
+  <img src="docs/plancha/piernas_separadas.png" alt="Cuerpo inclinado" width="600px" />
+</p>
