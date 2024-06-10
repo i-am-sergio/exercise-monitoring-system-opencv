@@ -7,6 +7,9 @@ class EstocadaController(ShowWindow):
         super().__init__('resources/models/model.tflite', 'detection/estocada.mp4')
         self.rep_count = 0
         self.initiated = False
+        self.tolerance_frames = 10
+        self.history_left = []
+        self.history_right = []
     
     def __del__(self):
         super().__del__()
@@ -58,7 +61,7 @@ class EstocadaController(ShowWindow):
         back_leg_angle_left = self.calculate_angle(right_knee, left_knee, left_ankle)
         back_leg_angle_right = self.calculate_angle(left_knee, right_knee, right_ankle)
 
-        horizontal_displacement = abs(left_knee[0] - right_knee[0])
+        horizontal_displacement = abs(left_knee[1] - right_knee[1])
         sufficient_displacement = self.check_sufficient_displacement(horizontal_displacement)
 
         correct_front_leg_angle_left = self.check_front_leg_angle(front_leg_knee_angle_left)
@@ -84,7 +87,7 @@ class EstocadaController(ShowWindow):
         return (correct_position_left or correct_position_right) and sufficient_displacement
 
     def check_sufficient_displacement(self, displacement):
-        return displacement > 0.10
+        return displacement > 0.05
 
     def check_front_leg_angle(self, angle):
         return 70 <= angle <= 120
@@ -117,3 +120,15 @@ class EstocadaController(ShowWindow):
             {"name": "Pierna delantera" if correct_front_leg_angle_left or correct_front_leg_angle_right else "Corrige pierna delantera", "color": "green" if correct_front_leg_angle_left or correct_front_leg_angle_right else "red"},
             {"name": "Pierna trasera" if correct_back_leg_angle_right or correct_back_leg_angle_left else "Corrige pierna trasera", "color": "green" if correct_back_leg_angle_right or correct_back_leg_angle_left else "red"}
         ]
+
+    def update_history(self, correct_position_left, correct_position_right):
+        self.history_left.append(correct_position_left)
+        self.history_right.append(correct_position_right)
+
+        if len(self.history_left) > self.tolerance_frames:
+            self.history_left.pop(0)
+        if len(self.history_right) > self.tolerance_frames:
+            self.history_right.pop(0)
+
+    def check_consistency(self, history):
+        return sum(history) > len(history) // 2
