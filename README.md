@@ -1,4 +1,4 @@
-# Laboratorio 4: Sistema de Monitoreo de Ejercicios
+# Sistema de Monitoreo de Ejercicios en OpenCV
 
 [**Click Here for project settings**](SETTINGS.md)
 
@@ -859,3 +859,388 @@ Estas funciones del Controlador de Curl de Bíceps trabajan en conjunto para pro
 <p align="center">
   <img src="docs/bicep/bicep_incorrect.png" alt="Ejemplo Estocada" width="600px" />
 </p>
+
+### Plancha Controller:
+
+**Descripción:**
+
+La Plancha Controller es un sistema diseñado para analizar y evaluar la correcta ejecución de las flexiones de brazos (push-ups), un ejercicio popular para fortalecer el tren superior. Utiliza un modelo de detección de poses basado en TensorFlow Lite y una cámara para capturar los movimientos del usuario, asegurando que las flexiones se realicen con la técnica adecuada para maximizar los beneficios y minimizar el riesgo de lesiones.
+
+<p align="center">
+  <img src="docs/plancha/example.png" alt="Ejemplo Plancha" width="600px" />
+</p>
+
+#### Funciones:
+
+- **Calcular Distancia:**
+
+  Esta función calcula la distancia euclidiana entre dos puntos, que en este contexto son las coordenadas de los puntos clave del cuerpo.
+
+  ```python
+  def calculate_distance(self, point1, point2):
+      return np.linalg.norm(np.array(point1) - np.array(point2))
+  ```
+
+- **Verificar Ejercicio Completo:**
+
+  Esta función verifica si la ejecución de las flexiones es correcta evaluando los ángulos entre hombro, codo y muñeca, además de agregar verificaciones adicionales para garantizar la integridad del ejercicio.
+
+  ```python
+  def check_exercise(self, keypoints):
+
+        # Definimos los índices de los puntos de referencia relevantes para la flexión (push-up)
+        left_shoulder = keypoints[5]  # Índice 5 para el hombro izquierdo
+        left_elbow = keypoints[7]     # Índice 7 para el codo izquierdo
+        left_wrist = keypoints[9]     # Índice 9 para la muñeca izquierda
+
+        right_shoulder = keypoints[6]  # Índice 6 para el hombro derecho
+        right_elbow = keypoints[8]     # Índice 8 para el codo derecho
+        right_wrist = keypoints[10]    # Índice 10 para la muñeca derecha
+
+        # Calculamos los ángulos relevantes para verificar la flexión en ambos lados
+        angle_left = self.calculate_angle(left_shoulder, left_elbow, left_wrist)
+        angle_right = self.calculate_angle(right_shoulder, right_elbow, right_wrist)
+
+        # Verificamos si el ángulo en ambos lados es menor que el umbral dado
+        is_correct_left = angle_left < self.exercise_angle_threshold
+        is_correct_right = angle_right < self.exercise_angle_threshold
+
+        # Calcular el score para ambos lados
+        score_left = self.calculate_score(angle_left, self.exercise_angle_threshold)
+        score_right = self.calculate_score(angle_right, self.exercise_angle_threshold)
+
+        # Calcular el promedio de precisión entre los lados
+        score = np.mean([score_left, score_right])
+        score_porcent = score if score >= 0 else 0
+
+        # Determinar el color basado en la precisión
+        if score > 80:
+            color = "blue"
+        elif 1 <= score <= 80:
+            color = "green"
+        else:
+            color = "red"
+        # Verificar si las rodillas, caderas y pies están alineados correctamente
+        is_body_straight = self.check_body_alignment(keypoints, 120, 170)
+
+        # Verificar si la cabeza está alineada con los hombros
+        is_legs_straight = self.check_legs_alignment(keypoints, 130, 190)
+
+        # Verificar si las piernas están juntas
+        are_legs_together = self.check_legs_together(keypoints, 0.07)
+
+        # Crear las indicaciones con el mensaje descriptivo
+        indications = [
+            {"name": "Precision: " + str(round(score_porcent, 2)) + "%", "color": color},
+            {"name": "Piernas rectas" if is_legs_straight else "Enderece las piernas", "color": "green" if is_legs_straight else "red"},
+            {"name": "Cuerpo recto" if is_body_straight else "Enderece el cuerpo", "color": "green" if is_body_straight else "red"},
+            {"name": "Piernas juntas" if are_legs_together else "Junte las piernas", "color": "green" if are_legs_together else "red"}
+        ]
+
+        # Llamamos a la función show_indications para mostrar las indicaciones
+        self.show_indications(indications)
+
+        # Devolvemos True si el ejercicio se realiza correctamente en ambos lados
+        return is_correct_left and is_correct_right
+  ```
+
+- **Verificar Ejercicio Correcto:**
+
+  Esta función verifica si los angulos entre los hombros, codos y muñecas coinciden con el humbral dado.
+
+  ```python
+  def check_attempt(self, keypoints):
+    # Definimos los índices de los puntos de referencia relevantes para la flexión (push-up)
+    left_shoulder = keypoints[5]  # Índice 5 para el hombro izquierdo
+    left_elbow = keypoints[7]     # Índice 7 para el codo izquierdo
+    left_wrist = keypoints[9]     # Índice 9 para la muñeca izquierda
+
+    right_shoulder = keypoints[6]  # Índice 6 para el hombro derecho
+    right_elbow = keypoints[8]     # Índice 8 para el codo derecho
+    right_wrist = keypoints[10]    # Índice 10 para la muñeca derecha
+
+    # Calculamos los ángulos relevantes para verificar la flexión en ambos lados
+    angle_left = self.calculate_angle(left_shoulder, left_elbow, left_wrist)
+    angle_right = self.calculate_angle(right_shoulder, right_elbow, right_wrist)
+
+    # Verificamos si el ángulo en ambos lados es menor que el umbral dado
+    is_attempt_left = angle_left < self.attempt_angle_threshold
+    is_attempt_right = angle_right < self.attempt_angle_threshold
+
+    # Devolvemos True si el intento es válido en al menos un lado
+    return is_attempt_left and is_attempt_right
+  ```
+
+- **Calcular Puntuación:**
+
+  Esta función se basa en la diferencia que hay entre el angulo actual con respecto al angulo esperado, si el angulo actual es el mismo al del angulo esperado seria un puntaje de 100%
+
+  ```python
+  def calculate_score(self, angle, threshold):
+    return (1 - abs(threshold - angle) / threshold ) * 100
+  ```
+
+- **Crear Indicaciones:**
+
+  Esta función crea una lista de indicaciones basadas en la precisión y las diferentes posturas importantes para realizar una plancha correctamente
+
+  ```python
+    is_body_straight = self.check_body_alignment(keypoints, 120, 170)
+
+    # Verificar si la cabeza está alineada con los hombros
+    is_head_straight = self.check_head_alignment(keypoints, 0 , 9)
+    # Verificar si las piernas están juntas
+    are_legs_together = self.check_legs_together(keypoints, 0.07)
+
+    # Crear las indicaciones con el mensaje descriptivo
+    indications = [
+        {"name": "Precision: " + str(round(score_porcent, 2)) + "%", "color": color},
+        {"name": "Cabeza recta" if is_head_straight else "Enderece la cabeza", "color": "green" if is_head_straight else "red"},
+        {"name": "Cuerpo recto" if is_body_straight else "Enderece el cuerpo", "color": "green" if is_body_straight else "red"},
+        {"name": "Piernas juntas" if are_legs_together else "Junte las piernas", "color": "green" if are_legs_together else "red"}
+    ]
+  ```
+
+#### Análisis de diferentes casos al realizar la plancha
+
+- **Postura de inicio:**
+  Esta es la posicion inicial que debe tener la persona para iniciar la plancha, la presición es cero ya que aun no esta realizando la flexión.
+
+<p align="center">
+  <img src="docs/plancha/postura_correcta.png" alt="Postura correcta" width="600px" />
+</p>
+
+- **Cuerpo chueco**:
+Puede ocurrir en varias ocaciones, como al tener el cuerpo inclinado (debe estar recto desde tobillos hasta hombros)
+<p align="center">
+  <img src="docs/plancha/cuerpo_chueco.png" alt="Cuerpo inclinado" width="600px" />
+</p>
+
+- **Piernas separadas**:
+En una plancha la fuerza se debe realizar en el tren superior del cuerpo, por lo que tener las piernas separadas seria incorrecto al realizar el ejercicio.
+<p align="center">
+  <img src="docs/plancha/piernas_separadas.png" alt="Cuerpo inclinado" width="600px" />
+</p>
+
+### Abdominal Controller:
+
+**Descripción:**
+
+Es un controlador que supervisa y evalúa la ejecución correcta de ejercicios abdominales dentro de una aplicación de detección de movimiento corporal. Este controlador utiliza datos de puntos clave del cuerpo para calcular el ángulo de flexión durante el ejercicio. Además, verifica la alineación de las piernas y los pies para garantizar una postura adecuada. Con esta información, el controlador proporciona retroalimentación visual sobre la precisión del movimiento y sugiere correcciones si es necesario, lo que permite a los usuarios realizar abdominales de manera más efectiva y segura, independientemente de su nivel de experiencia en el ejercicio físico.
+
+<p align="center">
+  <img src="docs/abdominal/Correcto.png" alt="Ejemplo Estocada" width="600px" />
+</p>
+
+#### Funciones:
+
+- **Inicialización del Controlador Abdominal:**
+
+  Esta función inicializa la clase `AbdominalController`, configurando los parámetros iniciales y cargando el modelo y el video de detección.
+
+  ```python
+  def __init__(self):
+      super().__init__('resources/models/model.tflite', 'detection/abdominal.mp4')
+      self.rep_count = 0
+      self.is_crunch_correct = False
+      self.angle_attempt=100
+      self.angle_correct=30
+      self.angle_perfect=15
+  ```
+
+- **Destrucción del Controlador:**
+
+  Esta función elimina la instancia del controlador, liberando los recursos utilizados.
+
+  ```python
+  def __del__(self):
+      super().__del__()
+  ```
+
+- **Calcular Ángulo:**
+
+  Esta función calcula el ángulo entre tres puntos dados, utilizando aritmética de vectores y trigonometría.
+
+  ```python
+  def calculate_angle(self, a, b, c):
+      a = np.array(a)
+      b = np.array(b)
+      c = np.array(c)
+      radians = np.arctan2(c[1] - b[1], c[0] - b[0]) - np.arctan2(a[1] - b[1], a[0] - b[0])
+      angle = np.abs(radians * 180.0 / np.pi)
+      if angle > 180.0:
+          angle = 360 - angle
+      return angle
+  ```
+
+- **Verificar Ejercicio:**
+
+  Esta función verifica si el ejercicio se está realizando correctamente, evaluando el ángulo de crunch y la posición de las piernas y tobillos.
+
+  ```python
+  def check_exercise(self, keypoints):
+      # Left hip (11), left shoulder (5), and left knee (13)
+      hip_left = keypoints[11]
+      shoulder_left = keypoints[5]
+      knee_left = keypoints[13]
+
+      crunch_angle = self.calculate_angle(knee_left, hip_left, shoulder_left)
+
+      # Calcular score y color
+      score_percent, color = self.calculate_score_and_color(crunch_angle)
+      # Verificar si las piernas están juntas
+      are_legs_together = self.check_legs_together(keypoints, 0.10, 0.20)
+      # Verificar si los pies están juntos
+      are_ankle_together = self.check_ankle_together(keypoints, 0.10, 0.20)
+
+      # Crear las indicaciones con el mensaje descriptivo
+      indications = [
+          {"name": "Precision: " + str(round(score_percent, 2)) + "%", "color": color},
+          {"name": "Piernas Recogidas" if crunch_angle < 30 else "Recoja las piernas", "color": "green" if crunch_angle < 30 else "red"},
+          {"name": "Pies Juntos" if are_ankle_together else "Junte los pies", "color": "green" if are_ankle_together else "red"},
+          {"name": "Piernas juntas" if are_legs_together else "Junte las piernas", "color": "green" if are_legs_together else "red"}
+      ]
+
+      # Llamamos a la función show_indications para mostrar las indicaciones
+      self.show_indications(indications)
+
+      return crunch_angle < self.angle_correct  # Reduced threshold angle for crunch detection
+  ```
+
+- **Calcular Puntuación y Color:**
+
+  Esta función calcula la puntuación basada en el ángulo del crunch y determina el color asociado a dicha puntuación.
+
+  ```python
+  def calculate_score_and_color(self, crunch_angle):
+      # Ejemplo de indicaciones aleatorias con precisión
+      score = (1 - abs(self.angle_perfect - crunch_angle) / self.angle_correct ) * 100
+      score = score if score >= 0 else 0
+
+      # Determinar el color basado en la precisión
+      if score > 80:
+          color = "blue"
+      elif 1 <= score <= 80:
+          color = "green"
+      else:
+          color = "red"
+
+      return score, color
+  ```
+
+- **Verificar Intento de Crunch:**
+
+  Esta función verifica si el ángulo del crunch está dentro del umbral de intento.
+
+  ```python
+  def check_attempt(self, keypoints):
+      # Left hip (11), left shoulder (5), and left knee (13)
+      hip_left = keypoints[11]
+      shoulder_left = keypoints[5]
+      knee_left = keypoints[13]
+
+      crunch_angle = self.calculate_angle(knee_left, hip_left, shoulder_left)
+      return crunch_angle < self.angle_attempt
+  ```
+
+- **Verificar Piernas Juntas:**
+
+  Esta función verifica si las piernas están juntas, evaluando la distancia horizontal entre las rodillas.
+
+  ```python
+  def check_legs_together(self, keypoints, x_max_distance, y_max_distance):
+        # Definir los índices para los puntos de referencia de las caderas, rodillas y tobillos
+        knee_left = keypoints[13]
+        knee_right = keypoints[14]
+
+        #Calcular distancia en ejex y ejey
+        x_horizontal_displacement = abs(knee_left[1] - knee_right[1])
+        y_horizontal_displacement = abs(knee_left[0] - knee_right[0])
+        return (x_horizontal_displacement < x_max_distance) and (y_horizontal_displacement < y_max_distance)
+  ```
+
+- **Verificar Tobillos Juntos:**
+
+  Esta función verifica si los tobillos están juntos, evaluando la distancia horizontal entre ellos.
+
+  ```python
+  def check_ankle_together(self, keypoints, x_max_distance, y_max_distance):
+        # Definir los índices para los puntos de referencia de las caderas, rodillas y tobillos
+        ankle_left = keypoints[15]
+        ankle_right = keypoints[16]
+
+        # Calcular distancia en eje x y eje y
+        x_horizontal_displacement = abs(ankle_left[1] - ankle_right[1])
+        y_horizontal_displacement = abs(ankle_left[0] - ankle_right[0])
+        return (x_horizontal_displacement < x_max_distance) and (y_horizontal_displacement < y_max_distance)
+
+  ```
+
+## Casos de Ejercicio
+
+### Ejercicio Correcto
+
+- **Descripción:** En esta imagen se muestra cómo deben estar las piernas recogidas correctamente durante el ejercicio.
+- **Indicaciones:** Si las piernas están recogidas, se mostrará el mensaje "Piernas Recogidas" en color verde.
+- **Imagen:**
+
+    <p align="center">
+    <img src="docs/abdominal/Correcto.png" alt="Ejemplo Estocada" width="600px" />
+    </p>
+
+### Ejercicio Incorrecto
+
+- **Descripción:** En esta imagen se muestra un ejemplo de piernas no recogidas adecuadamente.
+- **Indicaciones:** Si las piernas no están recogidas, se mostrará el mensaje "Recoja las piernas" en color rojo.
+- **Imagen:**
+  <p align="center">
+  <img src="docs/abdominal/Incorrecto.png" alt="Ejemplo Estocada" width="600px" />
+  </p>
+
+### Pies No Juntos
+
+- **Descripción:** En esta imagen se muestra un ejemplo de pies no juntos adecuadamente.
+- **Indicaciones:** Si los pies no están juntos, se mostrará el mensaje "Junte los pies" en color rojo.
+- **Imagen:**
+
+  <p align="center">
+  <img src="docs/abdominal/FalloPies.png" alt="Ejemplo Estocada" width="600px" />
+  </p>
+
+### Pies Juntos Correctamente
+
+- **Descripción:** En esta imagen se muestra la posición correcta de los pies juntos durante el ejercicio.
+- **Indicaciones:** Si los pies están juntos, se mostrará el mensaje "Pies Juntos" en color verde.
+- **Imagen:**
+
+  <p align="center">
+  <img src="docs/abdominal/PosicionCorrecta.png" alt="Ejemplo Estocada" width="600px" />
+  </p>
+
+### Piernas No Juntas
+
+- **Descripción:** En esta imagen se muestra un ejemplo de piernas no juntas adecuadamente.
+- **Indicaciones:** Si las piernas no están juntas, se mostrará el mensaje "Junte las piernas" en color rojo.
+- **Imagen:**
+
+  <p align="center">
+  <img src="docs/abdominal/FalloPiernas.png" alt="Ejemplo Estocada" width="600px" />
+  </p>
+
+### Piernas Juntas Correctamente
+
+- **Descripción:** En esta imagen se muestra la posición correcta de las piernas juntas durante el ejercicio.
+- **Indicaciones:** Si las piernas están juntas, se mostrará el mensaje "Piernas juntas" en color verde.
+- **Imagen:**
+
+  <p align="center">
+  <img src="docs/abdominal/PosicionCorrecta.png" alt="Ejemplo Estocada" width="600px" />
+  </p>
+
+## License:
+
+This project is licensed under [Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional](http://creativecommons.org/licenses/by-nc-sa/4.0/):
+
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">
+  <img alt="Licencia Creative Commons" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" />
+</a>

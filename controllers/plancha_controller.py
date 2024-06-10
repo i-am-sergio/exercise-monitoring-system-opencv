@@ -2,6 +2,7 @@ import sys
 import cv2
 from detection.movenet_thunder import ShowWindow
 import numpy as np
+import numpy as np
 
 class PlanchaController(ShowWindow):
     def __init__(self):
@@ -21,7 +22,53 @@ class PlanchaController(ShowWindow):
             angle = 360 - angle
         return angle
     
+    def calculate_score(self, angle, threshold):
+        return (1 - abs(threshold - angle) / threshold ) * 100 
+    
+    def check_body_alignment(self, keypoints, min_angle, max_angle):
+            # Definir los índices para los puntos de referencia del cuerpo
+            left_knee = keypoints[13]  # Índice 11 para la rodilla izquierda
+            left_hip = keypoints[11]  # Índice 15 para el cadera izquierdo
+            left_shoulder = keypoints[5]  # Índice 13 para la hombro izquierda
+
+            right_knee = keypoints[14]  # Índice 12 para la rodilla derecha
+            right_hip = keypoints[12]  # Índice 14 para la cadera derecha
+            right_shoulder = keypoints[6]  # Índice 16 para el hombro derecho
+        
+            # Calcular los ángulos de las caderas, rodillas y tobillos
+            angle_hip_left = self.calculate_angle(left_knee, left_hip, left_shoulder)
+            angle_hip_right = self.calculate_angle(right_knee, right_hip, right_shoulder)
+            # Verificar si los ángulos están dentro del rango especificado
+            return min_angle <= angle_hip_left <= max_angle and min_angle <= angle_hip_right <= max_angle
+        
+    def check_legs_alignment(self, keypoints, min_angle,max_angle):
+        left_hip = keypoints[15]
+        left_knee = keypoints[13]
+        left_ankle = keypoints[11]
+
+        right_hip = keypoints[16]
+        right_knee = keypoints[14]
+        right_ankle = keypoints[12]
+        
+        angle_left = self.calculate_angle(left_hip, left_knee, left_ankle)
+        angle_right = self.calculate_angle(right_hip, right_knee, right_ankle)
+        # Verificar si los ángulos están dentro del rango especificado
+        return  min_angle < angle_left < max_angle and min_angle < angle_right < max_angle
+    
+    def check_legs_together(self, keypoints, max_distance):
+            # Definir los índices para los puntos de referencia de las caderas, rodillas y tobillos
+            left_ankle = keypoints[15]
+            right_ankle = keypoints[16]
+
+            left_knee = keypoints[13]
+            right_knee = keypoints[14]
+            separation_ankle = np.abs(left_ankle[0] - right_ankle[0])
+            separation_knee = np.abs(left_knee[0] - right_knee[0])
+            # Verificar si los ángulos están dentro del rango especificado
+            return  separation_ankle < max_distance and separation_knee < max_distance
+
     def check_exercise(self, keypoints):
+        
         # Definimos los índices de los puntos de referencia relevantes para la flexión (push-up)
         left_shoulder = keypoints[5]  # Índice 5 para el hombro izquierdo
         left_elbow = keypoints[7]     # Índice 7 para el codo izquierdo
@@ -39,9 +86,9 @@ class PlanchaController(ShowWindow):
         is_correct_left = angle_left < self.exercise_angle_threshold
         is_correct_right = angle_right < self.exercise_angle_threshold
         
-        # Ejemplo de indicaciones aleatorias con precisión
-        score_left = (1 - abs(self.exercise_angle_threshold - angle_left) / self.exercise_angle_threshold ) * 100 
-        score_right = (1 - abs(self.exercise_angle_threshold - angle_right) / self.exercise_angle_threshold ) * 100 
+        # Calcular el score para ambos lados
+        score_left = self.calculate_score(angle_left, self.exercise_angle_threshold)
+        score_right = self.calculate_score(angle_right, self.exercise_angle_threshold)
         
         # Calcular el promedio de precisión entre los lados
         score = np.mean([score_left, score_right])
@@ -58,18 +105,17 @@ class PlanchaController(ShowWindow):
         is_body_straight = self.check_body_alignment(keypoints, 120, 170)
         
         # Verificar si la cabeza está alineada con los hombros
-        is_head_straight = self.check_head_alignment(keypoints, 0 , 90)
+        is_legs_straight = self.check_legs_alignment(keypoints, 130, 190)
 
         # Verificar si las piernas están juntas
-        are_legs_together = self.check_legs_together(keypoints, 80, 180)
-        
+        are_legs_together = self.check_legs_together(keypoints, 0.07)
         
         # Crear las indicaciones con el mensaje descriptivo
         indications = [
             {"name": "Precision: " + str(round(score_porcent, 2)) + "%", "color": color},
-            {"name": "Cabeza recta" if is_head_straight else "Cabeza inclinada", "color": "green" if is_head_straight else "orange"},
-            {"name": "Cuerpo recto" if is_body_straight else "Cuerpo inclinado", "color": "green" if is_body_straight else "red"},
-            {"name": "Piernas juntas" if are_legs_together else "Piernas separadas", "color": "green" if are_legs_together else "orange"}
+            {"name": "Piernas rectas" if is_legs_straight else "Enderece las piernas", "color": "green" if is_legs_straight else "red"},
+            {"name": "Cuerpo recto" if is_body_straight else "Enderece el cuerpo", "color": "green" if is_body_straight else "red"},
+            {"name": "Piernas juntas" if are_legs_together else "Junte las piernas", "color": "green" if are_legs_together else "red"}
         ]
         
         # Llamamos a la función show_indications para mostrar las indicaciones
@@ -77,7 +123,6 @@ class PlanchaController(ShowWindow):
         
         # Devolvemos True si el ejercicio se realiza correctamente en ambos lados
         return is_correct_left and is_correct_right
-
 
     def check_attempt(self, keypoints):
         # Definimos los índices de los puntos de referencia relevantes para la flexión (push-up)
@@ -99,43 +144,3 @@ class PlanchaController(ShowWindow):
         
         # Devolvemos True si el intento es válido en al menos un lado
         return is_attempt_left and is_attempt_right
-    
-    def check_body_alignment(self, keypoints, min_angle, max_angle):
-        # Definir los índices para los puntos de referencia del cuerpo
-        left_knee = keypoints[13]  # Índice 11 para la rodilla izquierda
-        left_hip = keypoints[11]  # Índice 15 para el cadera izquierdo
-        left_shoulder = keypoints[5]  # Índice 13 para la hombro izquierda
-
-        right_knee = keypoints[14]  # Índice 12 para la rodilla derecha
-        right_hip = keypoints[12]  # Índice 14 para la cadera derecha
-        right_shoulder = keypoints[6]  # Índice 16 para el hombro derecho
-        
-        # Calcular los ángulos de las caderas, rodillas y tobillos
-        angle_hip_left = self.calculate_angle(left_knee, left_hip, left_shoulder)
-        angle_hip_right = self.calculate_angle(right_knee, right_hip, right_shoulder)
-        # Verificar si los ángulos están dentro del rango especificado
-        return min_angle <= angle_hip_left <= max_angle and min_angle <= angle_hip_right <= max_angle
-    
-    def check_head_alignment(self, keypoints, min_angle, max_angle):
-        # Definir los índices para los puntos de referencia de la cabeza y los hombros
-        left_shoulder = keypoints[5]
-        right_shoulder = keypoints[6]
-        nose = keypoints[0]
-
-        # Calcular el ángulo entre la cabeza y los hombros
-        angle_head_shoulder_left = self.calculate_angle(left_shoulder, nose, right_shoulder)
-        
-        # Verificar si el ángulo es menor que el umbral especificado
-        return angle_head_shoulder_left >= min_angle and angle_head_shoulder_left <= max_angle
-    
-    def check_legs_together(self, keypoints, angle_min, angle_max):
-        # Definir los índices para los puntos de referencia de las caderas, rodillas y tobillos
-        hip_right = keypoints[12]
-        knee_left = keypoints[13]
-        knee_right = keypoints[14]
-
-        # Calcular los ángulos entre las caderas y las rodillas
-        angle_hip_right_knee = self.calculate_angle(hip_right, knee_right, knee_left)
-        
-        # Verificar si los ángulos están dentro del rango especificado
-        return  angle_min <= angle_hip_right_knee <= angle_max 

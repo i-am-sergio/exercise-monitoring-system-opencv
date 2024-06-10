@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from PyQt5.QtGui import QCursor
+from PyQt5.QtCore import Qt
 BUTTON_STYLE = (
     "QPushButton {"
     "    background-color: #787878;"
@@ -40,6 +41,7 @@ class UiMainWindow(object):
         self.grid_layout.setObjectName("grid_layout")
         
         self.sentadilla_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.sentadilla_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.sentadilla_btn.setMinimumSize(QtCore.QSize(350, 210))
         self.sentadilla_btn.setMaximumSize(QtCore.QSize(350, 210))
         font = QtGui.QFont()
@@ -55,6 +57,7 @@ class UiMainWindow(object):
         self.grid_layout.addWidget(self.sentadilla_btn, 0, 0, 1, 1)
         
         self.estocada_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.estocada_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.estocada_btn.setMinimumSize(QtCore.QSize(350, 210))
         self.estocada_btn.setMaximumSize(QtCore.QSize(350, 210))
         self.estocada_btn.setStyleSheet(BUTTON_STYLE)
@@ -64,6 +67,7 @@ class UiMainWindow(object):
         
         
         self.abdominal_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.abdominal_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.abdominal_btn.setMinimumSize(QtCore.QSize(350, 210))
         self.abdominal_btn.setMaximumSize(QtCore.QSize(350, 210))
         self.abdominal_btn.setStyleSheet(BUTTON_STYLE)
@@ -72,6 +76,7 @@ class UiMainWindow(object):
         self.grid_layout.addWidget(self.abdominal_btn, 1, 1, 1, 1)
         
         self.jumps_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.jumps_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.jumps_btn.setMinimumSize(QtCore.QSize(350, 210))
         self.jumps_btn.setMaximumSize(QtCore.QSize(350, 210))
         self.jumps_btn.setStyleSheet(BUTTON_STYLE)
@@ -80,6 +85,7 @@ class UiMainWindow(object):
         self.grid_layout.addWidget(self.jumps_btn, 3, 0, 1, 1)
         
         self.plancha_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.plancha_btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.plancha_btn.setMinimumSize(QtCore.QSize(350, 210))
         self.plancha_btn.setMaximumSize(QtCore.QSize(350, 210))
         self.plancha_btn.setStyleSheet(BUTTON_STYLE)
@@ -88,6 +94,7 @@ class UiMainWindow(object):
         self.grid_layout.addWidget(self.plancha_btn, 3, 1, 1, 1)
         
         self.biceps_btn = QtWidgets.QPushButton(self.widget_izq)
+        self.biceps_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.biceps_btn.setMinimumSize(QtCore.QSize(350, 210))
         self.biceps_btn.setMaximumSize(QtCore.QSize(350, 210))
         self.biceps_btn.setStyleSheet(BUTTON_STYLE)
