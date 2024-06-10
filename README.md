@@ -306,6 +306,186 @@ La verificación del intento y corrección se realiza mediante dos métodos: `se
 
 ## Controllers:
 
+
+
+### Sentadilla Controller:
+
+**Descripcion:**
+
+El Sentadilla Controller es un controlador que usa el sistema para analizar y evaluar la correcta ejecución de las sentadillas, un ejercicio fundamental para el fortalecimiento de piernas y glúteos. Este sistema utiliza un modelo de detección de poses basado en TensorFlow Lite y una cámara para capturar los movimientos del usuario. Su objetivo es garantizar que las sentadillas se realicen con la técnica adecuada para maximizar los beneficios y reducir el riesgo de lesiones.
+
+Incluye funciones para verificar varios aspectos de la ejecución de las sentadillas. Por ejemplo, verifica la profundidad de la sentadilla, asegurando que la cadera descienda al menos hasta la altura de las rodillas. También verifica el ángulo de la cadera, asegurando que esté por debajo de los 90 grados, y el ángulo de las rodillas, para garantizar una alineación adecuada y evitar tensiones innecesarias en las articulaciones.
+...
+
+<p align="center">
+  <img src="docs/sentadilla/example.png" alt="Ejemplo Sentadilla" width="600px" />
+</p>
+
+#### Funciones:
+
+- **Verificación Completa de la Sentadilla:**
+
+    Esta función analiza exhaustivamente la ejecución de la sentadilla, evaluando diversos aspectos como la profundidad, la alineación de la cadera y las rodillas, y la distribución del peso corporal. Si todos los criterios se satisfacen, se determina que la sentadilla se ha realizado correctamente.
+
+    ```python
+    def check_exercise(self, keypoints):
+
+        left_shoulder = keypoints[5][:2]
+        right_shoulder = keypoints[6][:2]
+        left_hip = keypoints[11][:2]
+        right_hip = keypoints[12][:2]
+        left_knee = keypoints[13][:2]
+        right_knee = keypoints[14][:2]
+
+        correct_depth_squat = self.check_depth_squat(keypoints)
+        correct_hip_angle = self.check_hip_angle(keypoints)
+        correct_knee_angle = self.check_knee_angle(keypoints)
+
+        # Ángulo de la cadera
+        hip_angle_left = self.calculate_angle(left_shoulder, left_hip, left_knee)
+        hip_angle_right = self.calculate_angle(right_shoulder, right_hip, right_knee)
+
+        score_left = self.calculate_score(hip_angle_left)
+        score_right = self.calculate_score(hip_angle_right)
+
+        score_percent, color = self.calculate_score_and_color(score_left, score_right)
+
+        indications = self.create_indications(score_percent, color, correct_hip_angle, correct_knee_angle)
+
+        self.show_indications(indications)
+
+        return correct_depth_squat and correct_hip_angle and correct_knee_angle
+
+    ```
+
+- **Verificar Intento de Sentadilla:**
+    Esta función determina si el usuario está intentando realizar una sentadilla, evaluando la posición de las articulaciones relevantes, como las caderas, rodillas y tobillos. Se basa en la detección de un ángulo específico en las rodillas y la distancia entre los hombros y las rodillas para identificar el intento de realizar el ejercicio.
+
+    ```python
+    def check_attempt(self, keypoints):
+        # Extract relevant keypoints
+        left_hip = keypoints[11][:2]
+        right_hip = keypoints[12][:2]
+        left_knee = keypoints[13][:2]
+        right_knee = keypoints[14][:2]
+        left_ankle = keypoints[15][:2]
+        right_ankle = keypoints[16][:2]
+        left_shoulder = keypoints[5][:2]
+        right_shoulder = keypoints[6][:2]
+
+        angle_left = self.calculate_angle(left_hip, left_knee, left_ankle)
+        angle_right = self.calculate_angle(right_hip, right_knee, right_ankle)
+
+        # distance between shoulders and knees
+        distance_left = self.calculate_distance(left_shoulder, left_knee)
+        distance_right = self.calculate_distance(right_shoulder, right_knee)
+
+        # if distances < 0.3 is attempting
+        if distance_left < 0.3 and distance_right < 0.3:
+            return angle_left < self.angle_knee_attempt and angle_right < self.angle_knee_attempt
+        else:
+            return False
+    ```
+
+- **Verificar Profundidad de la Sentadilla:**
+    Esta función comprueba si la profundidad de la sentadilla es adecuada, considerando la diferencia vertical entre las caderas y las rodillas cuando se flexionan. Se establece un umbral mínimo para garantizar que la sentadilla alcance una profundidad suficiente para ser efectiva.
+
+    ```python
+    def check_depth_squat(self, keypoints):
+        left_hip = keypoints[11][:2]
+        right_hip = keypoints[12][:2]
+        left_knee = keypoints[13][:2]
+        right_knee = keypoints[14][:2]
+
+        # Toma en cuenta el eje y para determinar la profundidad de la sentadilla, la diferencia entre la cadera y la rodilla cuando se flexiona debe ser menor a 0.1
+        left_y_diff = abs(left_hip[1] - left_knee[1])
+        right_y_diff = abs(right_hip[1] - right_knee[1])
+
+        return left_y_diff < 0.1 and right_y_diff < 0.1
+
+    ```
+
+- **Verificar Ángulo de la Cadera:**
+    Esta función verifica que el ángulo formado por la cadera, la rodilla y el tobillo esté dentro de un rango óptimo durante la ejecución de la sentadilla. Un ángulo de cadera apropiado es fundamental para mantener una postura correcta y prevenir lesiones.
+
+    ```python
+    def check_hip_angle(self, keypoints):
+        left_shoulder = keypoints[5][:2]
+        right_shoulder = keypoints[6][:2]
+        left_hip = keypoints[11][:2]
+        right_hip = keypoints[12][:2]
+        left_knee = keypoints[13][:2]
+        right_knee = keypoints[14][:2]
+
+        # Ángulo de la cadera
+        hip_angle_left = self.calculate_angle(left_shoulder, left_hip, left_knee)
+        hip_angle_right = self.calculate_angle(right_shoulder, right_hip, right_knee)
+
+        return hip_angle_left < 90 and hip_angle_right < 90
+    ```
+
+- **Verificar Ángulo de las Rodillas:**
+    Esta función evalúa el ángulo formado por la articulación de la cadera, la rodilla y el tobillo para cada pierna durante la sentadilla. Un ángulo de rodilla adecuado es esencial para garantizar una distribución equilibrada del peso corporal y evitar tensiones indebidas en las articulaciones.
+
+    ```python
+    def check_knee_angle(self, keypoints):
+        left_hip = keypoints[11][:2]
+        right_hip = keypoints[12][:2]
+        left_knee = keypoints[13][:2]
+        right_knee = keypoints[14][:2]
+        left_ankle = keypoints[15][:2]
+        right_ankle = keypoints[16][:2]
+
+        # Ángulo de la rodilla
+        knee_angle_left = self.calculate_angle(left_hip, left_knee, left_ankle)
+        knee_angle_right = self.calculate_angle(right_hip, right_knee, right_ankle)
+
+        # print("Knee Left: ", knee_angle_left, "  -  Knee Right: ", knee_angle_right)
+
+        return knee_angle_left < 100 and knee_angle_right < 100
+    ```
+
+- **Calcular Puntuación de Ejecución:**
+    Esta función calcula una puntuación que refleja la calidad de la ejecución de la sentadilla, basada en la precisión de los ángulos de las articulaciones y otros factores relevantes. La puntuación proporciona una medida objetiva del rendimiento del usuario durante el ejercicio.
+
+    ```python
+    def calculate_score(self, angle):
+        return (1 - abs(90 - angle) / 90) * 100
+    ```
+
+- **Calcular Puntuación y Color:**
+    Esta función determina el color de las indicaciones visuales mostradas al usuario durante la evaluación de la sentadilla, en función de la puntuación obtenida.
+
+    ```python
+    def calculate_score_and_color(self, score_left, score_right):
+        score = np.mean([score_left, score_right])
+        score_percent = score if score >= 0 else 0
+
+        if score >= 80:
+            color = "blue"
+        elif 1 <= score < 80:
+            color = "green"
+        else:
+            color = "red"
+
+        return score_percent, color
+    ```
+
+- **Crear Indicaciones Visuales:**
+    Esta función genera indicaciones visuales para guiar al usuario durante la realización de la sentadilla, incluyendo información sobre la precisión de la ejecución y posibles correcciones que se deben realizar. Las indicaciones se presentan de manera intuitiva para facilitar la comprensión y el seguimiento del usuario.
+    ```python
+    def create_indications(self, score_percent, color, correct_hip_angle, correct_knee_angle):
+        return [
+            {"name": "Precision: " + str(round(score_percent, 2)) + "%", "color": color },
+            {"name": "Cadera correcta" if correct_hip_angle else "Corrige Cadera", "color": "green" if correct_hip_angle else "red"},
+            {"name": "Rodilla correcta" if correct_knee_angle else "Agachate Mas", "color": "green" if correct_knee_angle else "red"}
+        ]
+    ```
+
+
+
+
+
 ### Estocada Controller:
 
 **Descripción:**
