@@ -228,9 +228,9 @@ El Estocada Controller es un sistema diseñado para analizar y evaluar la correc
                       correct_back_leg_angle_right, correct_back_leg_angle_left):
       return [
           {"name": "Precisión: " + str(round(score_percent, 2)) + "%", "color": color},
-          {"name": "Piernas dobladas" if correct_position_left or correct_position_right else "Corrige piernas", "color": "green" if correct_position_left or correct_position_right else "red"},
-          {"name": "Pierna delantera" if correct_front_leg_angle_left or correct_front_leg_angle_right else "Corrige pierna delantera", "color": "green" if correct_front_leg_angle_left or correct_front_leg_angle_right else "red"},
-          {"name": "Pierna trasera" if correct_back_leg_angle_right or correct_back_leg_angle_left else "Corrige pierna trasera", "color": "green" if correct_back_leg_angle_right or correct_back_leg_angle_left else "red"}
+          {"name": "Piernas dobladas" if correct_position_left or correct_position_right else "Doble las piernas", "color": "green" if correct_position_left or correct_position_right else "red"},
+          {"name": "Pierna delantera" if correct_front_leg_angle_left or correct_front_leg_angle_right else "Doble pierna delantera", "color": "green" if correct_front_leg_angle_left or correct_front_leg_angle_right else "red"},
+          {"name": "Pierna trasera" if correct_back_leg_angle_right or correct_back_leg_angle_left else "Doble pierna trasera", "color": "green" if correct_back_leg_angle_right or correct_back_leg_angle_left else "red"}
       ]
   ```
 
@@ -337,7 +337,7 @@ El Polichinela Controller es un sistema diseñado para analizar y evaluar la cor
   def create_indications(self, score_percent, color, is_correct, is_correct_tolerant, wrist_vertical_threshold, left_wrist_vertical_movement, right_wrist_vertical_movement):
       return [
           {"name": "Precisión: " + str(round(score_percent, 2)) + "%", "color": color},
-          {"name": "Piernas estiradas" if is_correct or is_correct_tolerant else "Corrige piernas", "color": "green" if is_correct or is_correct_tolerant else "red"},
-          {"name": "Brazos estirados" if left_wrist_vertical_movement < wrist_vertical_threshold or right_wrist_vertical_movement < wrist_vertical_threshold else "Corrige brazos", "color": "green" if left_wrist_vertical_movement < wrist_vertical_threshold or right_wrist_vertical_movement < wrist_vertical_threshold else "red"}
+          {"name": "Piernas estiradas" if is_correct or is_correct_tolerant else "Estira piernas", "color": "green" if is_correct or is_correct_tolerant else "red"},
+          {"name": "Brazos estirados" if left_wrist_vertical_movement < wrist_vertical_threshold or right_wrist_vertical_movement < wrist_vertical_threshold else "Levante los brazos", "color": "green" if left_wrist_vertical_movement < wrist_vertical_threshold or right_wrist_vertical_movement < wrist_vertical_threshold else "red"}
       ]
   ```

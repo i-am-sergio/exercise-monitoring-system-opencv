@@ -48,8 +48,8 @@ class JumpsController(ShowWindow):
         # Create the indications with descriptive messages
         indications = [
             {"name": "Precisión: " + str(round(score_percent, 2)) + "%", "color": color},
-            {"name": "Piernas estiradas" if is_correct or is_correct_tolerant else "Corrige piernas", "color": "green" if is_correct or is_correct_tolerant else "red"},
-            {"name": "Brazos estirados" if left_wrist_vertical_movement < wrist_vertical_threshold or right_wrist_vertical_movement < wrist_vertical_threshold else "Corrige brazos", "color": "green" if left_wrist_vertical_movement < wrist_vertical_threshold or right_wrist_vertical_movement < wrist_vertical_threshold else "red"}
+            {"name": "Piernas estiradas" if is_correct or is_correct_tolerant else "Estira piernas", "color": "green" if is_correct or is_correct_tolerant else "red"},
+            {"name": "Brazos estirados" if left_wrist_vertical_movement < wrist_vertical_threshold or right_wrist_vertical_movement < wrist_vertical_threshold else "Levante los brazos", "color": "green" if left_wrist_vertical_movement < wrist_vertical_threshold or right_wrist_vertical_movement < wrist_vertical_threshold else "red"}
         ]
 
         self.show_indications(indications)
