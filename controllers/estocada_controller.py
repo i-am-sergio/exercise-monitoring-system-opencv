@@ -49,30 +49,71 @@ class EstocadaController(ShowWindow):
         return body_flexing and body_angle < 150 and knee_angle_left < 140 and knee_angle_right < 140
 
     def check_exercise(self, keypoints):
-        # Verificar la ejecución con la pierna izquierda adelante
-        left_hip = keypoints[11][:2]
-        left_knee = keypoints[13][:2]
-        left_ankle = keypoints[15][:2]
-        right_hip = keypoints[12][:2]
-        right_knee = keypoints[14][:2]
-        right_ankle = keypoints[16][:2]
+        left_hip, left_knee, left_ankle = keypoints[11][:2], keypoints[13][:2], keypoints[15][:2]
+        right_hip, right_knee, right_ankle = keypoints[12][:2], keypoints[14][:2], keypoints[16][:2]
 
-        # Determinar el ángulo en la rodilla y la cadera de la pierna adelantada (izquierda o derecha)
         front_leg_knee_angle_left = self.calculate_angle(left_hip, left_knee, left_ankle)
         front_leg_knee_angle_right = self.calculate_angle(right_hip, right_knee, right_ankle)
 
-        # Determinar el ángulo en la rodilla de la pierna trasera (izquierda o derecha)
         back_leg_angle_left = self.calculate_angle(right_knee, left_knee, left_ankle)
         back_leg_angle_right = self.calculate_angle(left_knee, right_knee, right_ankle)
 
-        # Chequear desplazamiento horizontal entre las rodillas para confirmar que una pierna está claramente adelantada
-        horizontal_displacement = abs(left_knee[0] - right_knee[0])
+        horizontal_displacement = abs(left_knee[1] - right_knee[1])
+        sufficient_displacement = self.check_sufficient_displacement(horizontal_displacement)
+
+        correct_front_leg_angle_left = self.check_front_leg_angle(front_leg_knee_angle_left)
+        correct_front_leg_angle_right = self.check_front_leg_angle(front_leg_knee_angle_right)
         
-        # Asegurar que la distancia horizontal es suficiente para considerar una pierna adelantada
-        sufficient_displacement = horizontal_displacement > 0.10  # Valor ajustable según la escala de los keypoints
+        correct_back_leg_angle_right = self.check_back_leg_angle(back_leg_angle_right)
+        correct_back_leg_angle_left = self.check_back_leg_angle(back_leg_angle_left)
 
-        # Aumentamos la tolerancia en los ángulos y aseguramos que las piernas no están paralelas
-        correct_position_left = (70 <= front_leg_knee_angle_left <= 120) and (back_leg_angle_right > 150)
-        correct_position_right = (70 <= front_leg_knee_angle_right <= 120) and (back_leg_angle_left > 150)
+        correct_position_left = correct_front_leg_angle_left and correct_back_leg_angle_right
+        correct_position_right = correct_front_leg_angle_right and correct_back_leg_angle_left
 
+        score_left = self.calculate_score(front_leg_knee_angle_left)
+        score_right = self.calculate_score(front_leg_knee_angle_right)
+        
+        score_percent, color = self.calculate_score_and_color(score_left, score_right)
+        
+        indications = self.create_indications(score_percent, color, correct_position_left, correct_position_right, 
+                                            correct_front_leg_angle_left, correct_front_leg_angle_right,
+                                            correct_back_leg_angle_right, correct_back_leg_angle_left)
+        
+        self.show_indications(indications)
+        
         return (correct_position_left or correct_position_right) and sufficient_displacement
+
+    def check_sufficient_displacement(self, displacement):
+        return displacement > 0.05
+
+    def check_front_leg_angle(self, angle):
+        return 70 <= angle <= 120
+
+    def check_back_leg_angle(self, angle):
+        return angle > 130
+
+    def calculate_score(self, angle):
+        return (1 - abs(90 - angle) / 90) * 100
+
+    def calculate_score_and_color(self, score_left, score_right):
+        score = np.mean([score_left, score_right])
+        score_percent = score if score >= 0 else 0
+        
+        if score >= 80:
+            color = "blue"
+        elif 1 <= score <= 80:
+            color = "green"
+        else:
+            color = "red"
+        
+        return score_percent, color
+
+    def create_indications(self, score_percent, color, correct_position_left, correct_position_right,
+                        correct_front_leg_angle_left, correct_front_leg_angle_right,
+                        correct_back_leg_angle_right, correct_back_leg_angle_left):
+        return [
+            {"name": "Precisión: " + str(round(score_percent, 2)) + "%", "color": color},
+            {"name": "Piernas dobladas" if correct_position_left or correct_position_right else "Doble las piernas", "color": "green" if correct_position_left or correct_position_right else "red"},
+            {"name": "Pierna delantera" if correct_front_leg_angle_left or correct_front_leg_angle_right else "Doble pierna delantera", "color": "green" if correct_front_leg_angle_left or correct_front_leg_angle_right else "red"},
+            {"name": "Pierna trasera" if correct_back_leg_angle_right or correct_back_leg_angle_left else "Doble pierna trasera", "color": "green" if correct_back_leg_angle_right or correct_back_leg_angle_left else "red"}
+        ]
