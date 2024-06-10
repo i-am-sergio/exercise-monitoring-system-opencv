@@ -976,7 +976,7 @@ La Plancha Controller es un sistema diseñado para analizar y evaluar la correct
         {"name": "Piernas juntas" if are_legs_together else "Junte las piernas", "color": "green" if are_legs_together else "red"}
     ]
   ```
-#### Analisís de diferentes casos al realizar la plancha
+#### Análisis de diferentes casos al realizar la plancha
 
 - **Postura de inicio:**
 Esta es la posicion inicial que debe tener la persona para iniciar la plancha, la presición es cero ya que aun no esta realizando la flexión.
