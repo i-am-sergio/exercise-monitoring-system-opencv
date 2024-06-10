@@ -108,6 +108,202 @@ exercise-monitoring-system/
 - CMake
 - Ninja (optional, for generating build files with CMake)
 
+## Movement Detection
+### Descripción del Modelo y Código
+Modelo `model.tflite` (COCO model)
+El modelo model.tflite es una versión optimizada para dispositivos móviles del modelo de detección de objetos COCO (Common Objects in Context). Este modelo ha sido entrenado en el conjunto de datos COCO, que contiene 80 clases de objetos comunes. Su objetivo principal es identificar y localizar objetos dentro de una imagen, proporcionando las coordenadas de los cuadros delimitadores (bounding boxes) y las etiquetas de clase correspondientes para cada objeto detectado.
+<p align="center">
+  <img src="docs/model/coco_model.png" alt="Screen2" width="600px" />
+</p>
+
+``` python
+KEYPOINT_DICT = {
+    'nose': 0,
+    'left_eye': 1,
+    'right_eye': 2,
+    'left_ear': 3,
+    'right_ear': 4,
+    'left_shoulder': 5,
+    'right_shoulder': 6,
+    'left_elbow': 7,
+    'right_elbow': 8,
+    'left_wrist': 9,
+    'right_wrist': 10,
+    'left_hip': 11,
+    'right_hip': 12,
+    'left_knee': 13,
+    'right_knee': 14,
+    'left_ankle': 15,
+    'right_ankle': 16
+}
+
+```
+
+### Descripción de las funciones
+
+Se hace uso de OpenCV y PyQt5 para la visualización y manipulación de video, junto con la detección de poses utilizando un modelo de TensorFlow Lite.
+
+#### Constructor
+```python
+def __init__(self, model_path="resources/models/model.tflite", video_path=0):
+    self.window = QMainWindow()
+    self.window.setWindowTitle("Ejercicios Opencv + Qt")
+    self.window.resize(1200, 700)
+    central_widget = QWidget()
+    self.window.setCentralWidget(central_widget)  
+    .
+    .
+    .
+```
+El constructor `__init__` de la clase `ShowWindow` inicializa la interfaz de usuario y los componentes necesarios para la visualización de video y detección de poses. Crea una ventana principal utilizando PyQt5, establece su título y dimensiones, y organiza los diferentes widgets utilizando un `QGridLayout`. Se definen etiquetas y botones con estilos específicos, así como grupos de etiquetas para mostrar contadores y mensajes de estado. Además, se carga el modelo de TensorFlow Lite para la detección de poses y se inicializan las variables relacionadas con el seguimiento de repeticiones correctas e incorrectas.
+
+#### Destructor
+```python
+def __del__(self):
+    try:
+        self.cap.release()
+    except AttributeError:
+        pass
+    try:
+        self.timer.stop()
+    except AttributeError:
+        pass
+```
+El método destructor `__del__` garantiza que los recursos de captura de video y el temporizador se liberen correctamente cuando la instancia de `ShowWindow` es destruida.
+
+
+#### Cierra de ventan de ejercicio
+
+```python
+def exit_application(self):
+    self.cap.release()
+    self.timer.stop()
+    self.window.close()
+```
+La función `exit_application` se encarga de liberar los recursos de captura de video y detener el temporizador antes de cerrar la ventana de la aplicación.
+
+
+#### Captura del video en QT container
+```python
+def show(self):
+    self.cap = cv2.VideoCapture(self.video_path)
+    if not self.cap.isOpened():
+        print("Error: No se pudo abrir el video.")
+        return
+    self.fps = self.cap.get(cv2.CAP_PROP_FPS)
+    self.frame_duration = 1.0 / self.fps
+    self.fps = self.cap.get(cv2.CAP_PROP_FPS)
+    self.frame_duration = 1.0 / self.fps
+    self.timer = QTimer()
+    self.timer.timeout.connect(self.update_window)
+    self.timer.start(16)
+```
+El método `show` inicializa la captura de video desde el `video_path` especificado, establece el temporizador para actualizar la ventana a intervalos regulares y maneja los errores en caso de que no se pueda abrir el video.
+
+#### Obtención de lo keypoints
+```python
+def get_keypoints(self, image):
+    input_image = tf.image.resize(image, (self.input_shape[1], self.input_shape[2]))
+    input_image = tf.cast(input_image, dtype=tf.uint8)
+    input_image = tf.expand_dims(input_image, axis=0)
+    self.interpreter.set_tensor(self.interpreter.get_input_details()[0]['index'], input_image)
+    self.interpreter.invoke()
+    keypoints_with_scores = self.interpreter.get_tensor(self.interpreter.get_output_details()[0]['index'])
+    return keypoints_with_scores
+```
+La función `get_keypoints` procesa la imagen de entrada para ajustarla al tamaño requerido por el modelo de TensorFlow Lite, ejecuta el modelo para obtener los puntos clave (keypoints) y sus puntuaciones.
+
+#### Graficar los keypoints
+
+```python
+def draw_predictions_on_image(self, image, keypoints_with_scores, keypoint_threshold=0.11):
+    height, width, _ = image.shape
+    keypoints = keypoints_with_scores[0, 0, :, :2]
+    keypoints_scores = keypoints_with_scores[0, 0, :, 2]
+
+    for idx, ((start, end), color) in enumerate(zip(self.edges, self.edge_colors)):
+        if keypoints_scores[start] > keypoint_threshold and keypoints_scores[end] > keypoint_threshold:
+            start_point = (int(keypoints[start, 1] * width), int(keypoints[start, 0] * height))
+            end_point = (int(keypoints[end, 1] * width), int(keypoints[end, 0] * height))
+            cv2.line(image, start_point, end_point, color, 2)
+    for i in range(keypoints.shape[0]):
+        if keypoints_scores[i] > keypoint
+
+_threshold:
+            center = (int(keypoints[i, 1] * width), int(keypoints[i, 0] * height))
+            cv2.circle(image, center, 3, (0, 0, 255), -1)
+    return image
+```
+La función `draw_predictions_on_image` dibuja las predicciones sobre la imagen original utilizando los puntos clave y sus puntuaciones. Las líneas se dibujan entre los puntos clave según los colores definidos en `edge_colors`.
+
+#### Actualización de frames
+```python
+def update_window(self):
+    ret, frame = self.cap.read()
+    if not ret:
+        self.timer.stop()
+        self.cap.release()
+        return
+
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    keypoints_with_scores = self.get_keypoints(frame_rgb)
+    keypoints = keypoints_with_scores[0][0]
+    is_attempt = self.check_attempt(keypoints)
+    is_correct = self.check_exercise(keypoints)
+
+    if self.previous_state is None:
+        self.previous_state = is_attempt
+
+    if self.previous_state != is_attempt:
+        if is_attempt:
+            self.correct_state = False
+        else:
+            if self.correct_state:
+                self.correct_repetitions += 1
+            else:
+                self.incorrect_repetitions += 1
+        self.previous_state = is_attempt
+
+    elif is_attempt:
+        if is_correct and not self.correct_state:
+            self.correct_state = True
+
+    self.show_feedback(is_attempt)
+    output_overlay = self.draw_predictions_on_image(frame, keypoints_with_scores)
+    self.show_image(output_overlay)
+```
+El método `update_window` se ejecuta en cada intervalo del temporizador, captura el siguiente cuadro del video, procesa los puntos clave, determina el estado del intento del usuario, actualiza los contadores de repeticiones y muestra las predicciones sobre la imagen original.
+
+#### Verificación de Intento y Corrección
+
+La verificación del intento y corrección se realiza mediante dos métodos: `self.check_attempt(keypoints)` y `self.check_exercise(keypoints)`. El primero determina si el usuario está intentando un ejercicio basado en los puntos clave, mientras que el segundo verifica si el intento actual es correcto según criterios predefinidos.
+
+#### Actualización del Estado y Contadores
+
+1. **Inicialización del Estado Anterior**:
+   - Si `self.previous_state` es `None` (primera iteración), se inicializa con el estado actual de intento (`is_attempt`).
+
+2. **Cambio de Estado**:
+   - Si el estado actual de intento (`is_attempt`) difiere del estado anterior (`self.previous_state`):
+     - **Inicio de un Nuevo Intento**: Si `is_attempt` es `True`, se marca `self.correct_state` como `False` (nuevo intento en curso).
+     - **Fin de un Intento**: Si `is_attempt` es `False`:
+       - **Actualización de Contadores**:
+         - **Intento Correcto**: Si `self.correct_state` es `True`, se incrementa `self.correct_repetitions`.
+         - **Intento Incorrecto**: Si `self.correct_state` es `False`, se incrementa `self.incorrect_repetitions`.
+     - Actualización del Estado Anterior: Se actualiza `self.previous_state` con el estado actual (`is_attempt`).
+
+3. **Durante un Intento**:
+   - Si `is_attempt` es `True`:
+     - **Verificación de Corrección**: Si el intento es correcto (`is_correct` es `True`) y `self.correct_state` es `False`, se marca `self.correct_state` como `True`.
+
+#### Retroalimentación y Visualización
+
+- **Mostrar Retroalimentación**: Se proporciona retroalimentación visual basada en el estado de intento actual mediante `self.show_feedback(is_attempt)`.
+- **Dibujo de Predicciones**: Se llama a `self.draw_predictions_on_image(frame, keypoints_with_scores)` para dibujar los puntos clave y las conexiones sobre el cuadro original.
+- **Mostrar Imagen**: Se muestra el cuadro procesado con las predicciones superpuestas. 
+
+
+
 ## Controllers:
 
 ### Estocada Controller:
@@ -347,6 +543,7 @@ El Controlador de Curl de Bíceps es un componente crucial en un sistema de asis
 <p align="center">
   <img src="docs/bicep/bicep_star.png" alt="Ejemplo Estocada" width="600px" />
 </p>
+
 #### Diseño del Controlador
 
 El Controlador de Curl de Bíceps se implementa en Python, utilizando el modelo TFLite para la detección de puntos clave (keypoints) del cuerpo humano. La detección de postura y la retroalimentación visual se llevan a cabo en tiempo real, permitiendo una corrección inmediata durante la ejecución del ejercicio.
