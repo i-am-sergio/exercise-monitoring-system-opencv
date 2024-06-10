@@ -3,7 +3,7 @@ import numpy as np
 
 class AbdominalController(ShowWindow):
     def __init__(self):
-        super().__init__('resources/models/model.tflite', 'detection/cortado1.mp4')
+        super().__init__('resources/models/model.tflite', 'detection/abdominal.mp4')
         self.rep_count = 0
         self.is_crunch_correct = False
         self.angle_attempt=100
