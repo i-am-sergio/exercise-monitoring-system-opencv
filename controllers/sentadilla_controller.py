@@ -47,10 +47,13 @@ class SentadillaController(ShowWindow):
         angle_right = self.calculate_angle(right_hip, right_knee, right_ankle)
         
         # if distances < 0.3 is attempting
-        if distance_left < 0.3 and distance_right < 0.3:
-            return angle_left < 95 and angle_right < 95
-        else:
-            return False
+        # if distance_left < 0.3 and distance_right < 0.3:
+        #     return angle_left < 95 and angle_right < 95
+        # else:
+        #     return False
+        correct_depth_squat = self.check_depth_squat(keypoints)
+
+        return correct_depth_squat
     
     # Check if the person is attempting to squat
     # Check if the angle between hips, knees and ankles is correct
@@ -78,3 +81,18 @@ class SentadillaController(ShowWindow):
             return angle_left < self.angle_knee_attempt and angle_right < self.angle_knee_attempt
         else:
             return False
+        
+    
+    # la cadera debe descender hasta alcanzar al menos la altura de las rodillas,
+    def check_depth_squat(self, keypoints):
+        left_hip = keypoints[11][:2]
+        right_hip = keypoints[12][:2]
+        left_knee = keypoints[13][:2]
+        right_knee = keypoints[14][:2]
+
+        # Toma en cuenta el eje y para determinar la profundidad de la sentadilla, la diferencia entre la cadera y la rodilla cuando se flexiona debe ser menor a 0.1
+        left_y_diff = abs(left_hip[1] - left_knee[1])
+        right_y_diff = abs(right_hip[1] - right_knee[1])
+
+        return left_y_diff < 0.1 and right_y_diff < 0.1
+        
