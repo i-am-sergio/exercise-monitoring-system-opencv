@@ -34,6 +34,10 @@ Este proyecto es un sistema de monitoreo de ejercicios que utiliza OpenCV para l
   <img src="resources/img/screen2.png" alt="Screen2" width="600px" />
 </p>
 
+<p align="center">
+  <img src="resources/img/demo.gif" alt="Screen3" width="600px" />
+</p>
+
 ## Requisitos
 
 1. **Captura de video en tiempo real:** El sistema debe ser capaz de capturar video de una cámara en tiempo real para monitorear los ejercicios mientras se realizan.
@@ -122,7 +126,7 @@ Modelo `model.tflite` (COCO model)
 El modelo model.tflite es una versión optimizada para dispositivos móviles del modelo de detección de objetos COCO (Common Objects in Context). Este modelo ha sido entrenado en el conjunto de datos COCO, que contiene 80 clases de objetos comunes. Su objetivo principal es identificar y localizar objetos dentro de una imagen, proporcionando las coordenadas de los cuadros delimitadores (bounding boxes) y las etiquetas de clase correspondientes para cada objeto detectado.
 
 <p align="center">
-  <img src="docs/model/coco_model.png" alt="Screen2" width="600px" />
+  <img src="docs/model/coco_model.png" alt="Screen2" width="320px" />
 </p>
 
 ```python
